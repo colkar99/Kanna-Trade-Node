@@ -16,7 +16,7 @@ var cors = require('cors')
 //     console.log(error);
 //   });
 app.use(cors())
-
+///
 app.get('/', async(req, res) => {
     try{
         const date = req.query.date;
