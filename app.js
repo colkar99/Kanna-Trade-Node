@@ -25,36 +25,62 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 //////
-app.get('/', async(req, res) => {
-    try{
-        res.send("Hello world am working")
-    }catch(err){
-        console.log("Error Happend",err);
-        res.status(500).send("Someting happend")
-    }
-  })
+app.get('/', async (req, res) => {
+  try {
+    res.send("Hello world am working")
+  } catch (err) {
+    console.log("Error Happend", err);
+    res.status(500).send("Someting happend")
+  }
+})
 
-  app.post('/getCandles', async(req, res) => {
-    try{
-        const date = req.body.date;
-        const token = req.body.token;
-        if(!token) return res.status(400).send('Token is missing')
-        const url = `https://kite.zerodha.com/oms/instruments/historical/8972290/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`
-        const config = {
-            headers:{
-                authorization: token,
-              
-            }
-          };
-        const response = await axios.get(url, config)
-        res.send(response.data)
+app.post('/getCandles', async (req, res) => {
+  try {
+    const date = req.body.date;
+    const token = req.body.token;
+    if (!token) return res.status(400).send('Token is missing')
+    const url = `https://kite.zerodha.com/oms/instruments/historical/8972290/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`
+    const config = {
+      headers: {
+        authorization: token,
 
-    }catch(err){
-        console.log("Error Happend",err);
-        res.status(500).send("Someting happend")
-    }
-  })
-  
-  app.listen(port, () => {
-    console.log(`App listening on port ${port}`)
-  })
+      }
+    };
+    const response = await axios.get(url, config)
+    res.send(response.data)
+
+  } catch (err) {
+    console.log("Error Happend", err);
+    res.status(500).send("Someting happend")
+  }
+})
+
+
+app.post('/instrument/id', async (req, res) => {
+  try {
+    console.log(req.body)
+    const fromDate = req.body.data.fromDate;
+    const toDate = req.body.data.toDate;
+    const token = req.body.data.token;
+    const instrumentId = req.body.data.instrumentId;
+
+    if (!token) return res.status(400).send('Token is missing')
+    const url = `https://kite.zerodha.com/oms/instruments/historical/${instrumentId}/5minute?user_id=WB5864&oi=1&from=${fromDate}&to=${toDate}`
+    const config = {
+      headers: {
+        authorization: token,
+
+      }
+    };
+    const response = await axios.get(url, config)
+    res.send(response.data)
+
+  } catch (err) {
+    console.log("Error Happend", err);
+    res.status(500).send("Someting happend")
+  }
+})
+
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`)
+})
