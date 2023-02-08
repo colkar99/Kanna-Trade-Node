@@ -27,7 +27,7 @@ app.use(bodyParser.json())
 //////
 app.get('/', async (req, res) => {
   try {
-    res.send("Hello world am working")
+    res.send({message:"Hello world am working"})
   } catch (err) {
     console.log("Error Happend", err);
     res.status(500).send("Someting happend")
@@ -39,7 +39,7 @@ app.post('/getCandles', async (req, res) => {
     const date = req.body.date;
     const token = req.body.token;
     if (!token) return res.status(400).send('Token is missing')
-    const url = `https://kite.zerodha.com/oms/instruments/historical/8972290/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`
+    const url = `https://kite.zerodha.com/oms/instruments/historical/12481794/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`
     const config = {
       headers: {
         authorization: token,
