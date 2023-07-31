@@ -6,16 +6,19 @@ var bodyParser = require("body-parser");
 var mongoose = require('mongoose')
 const schedule = require('node-schedule');
 var moment = require('moment'); // require
-var token = 'enctoken u0sksXBGmvONdukc+Jut6Xu4ZVOfpjX83Q7S+g8vZb8RqrBK/CfAKOueTXduOyFp3R4Hv1x5Ms6u81UP8FUPNw7RBeqzfYR/1wAFC/comNh+Zv88GZyOxQ==';
+var token = 'enctoken 4eEaODRaOWMQMzxAm6WcgifDEjYzp1xKWJQBAwKB1El82DYmR+5x8difuZbHHlkGgFYxtFW3jwOn1iHpUzywZ937Wv+H1mMrPIQYCTFufXzXxjd8qkulEg==';
 var apiService = require('./services/apiService');
 
 
 
 // var bankniftyData = require("./datas/banknifty");
- var {data} = require("./datas/bnTest");
+// var {data} = require("./datas/bnTest");
+ var {data} = require("./datas/realTest");
+
 var userRouter = require('./router/user');
 var testRouter = require('./router/test');
-var Core = require('./services/CoreLogic')
+var Core = require('./services/CoreLogic');
+var Trade = require('./model/Trade');
 
 
 
@@ -34,24 +37,23 @@ mongoose.connect(process.env.MONGODB, {
   .then(async(res) => {
     console.log("db connected successfully")
 
-    let interval = setInterval(async() => {
-      // for(let i = 0; i < data.length;i++){
-      //   const contents = await Core.mainFunction(data[i]);
-      //   console.log(contents)
-      // }
-      try{
-        let result = await apiService.getCandles(moment().add(-1 ,'days').format('YYYY-MM-DD'),token)
-        console.log(result);
-        for(let i = 0; i < result.length;i++){
-         const contents = await Core.mainFunction(result[i]);
-         console.log(contents)
-        }
-      }catch(err){
-        console.log(err)
-      }
-    },3000)
+    // let interval = setInterval(async() => {
+    //   try{
+    //     let result = await apiService.getCandles(moment().add(-1 ,'days').format('YYYY-MM-DD'),token)
+    //     console.log(result);
+    //     for(let i = 0; i < result.length;i++){
+    //      const contents = await Core.mainFunction(result[i]);
+    //      console.log(contents)
+    //     }
+    //   }catch(err){
+    //     console.log(err)
+    //   }
+    // },3000)
     
-      
+        for(let i = 0; i < data.length;i++){
+         const contents = await Core.mainFunction(data[i]);
+        //  console.log(contents)
+        }  
  
   })
   .catch((err) => console.log(err));
@@ -90,4 +92,22 @@ let val =moment('2023-07-29T15:25:00+0530').set({ hour:9, minute:25 });
 let val2 = moment('2023-07-29T15:25:00+0530');
 
 console.log(val.add(-1,'d'))
+const DailyMarketWatch = require('./model/DailyMarketWatch');
+
+// async function testing(){
+//   let datas = await DailyMarketWatch.find();
+//   console.log(datas.length)
+//   let count = 0
+//   datas.forEach((data) => {
+//     count += data.totalPointsEarned;
+//   })
+//   console.log(count * 30)
+// }
+// testing()
+
+var event = schedule.scheduleJob("2 */5 * * * *", function() {
+  console.log('This runs every 5 minutes');
+  console.log("Time now:" ,moment().format())
+});
+
 

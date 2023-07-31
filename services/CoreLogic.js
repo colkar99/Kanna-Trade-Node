@@ -1,7 +1,7 @@
 
 var moment = require('moment'); // require
 
-const {getCandles,getFullCandles} = require('./apiService')
+const {getCandles,getFullCandle,placeOrderToBroker,checkOrderStatusFromBroker,cancelOpenOrder} = require('./apiService')
 const DAYS = ['sunday','monday','tuesday','wednesday','thrusday','friday','saturday'];
 const DailyMarketWatch = require('../model/DailyMarketWatch');
 const startTime = '09:30:00+0530';
@@ -34,7 +34,7 @@ exports.mainFunction = async(data) => {
         let startTime = moment(data[0]).set({ hour:9, minute:30 });
         let endTime = moment(data[0]).set({ hour:15, minute:15 });
 
-        console.log(data[0])
+        //console.log(data[0])
         // console.log('Start Date:', day.getTime() > startTime);
         // console.log('End Date:',  day.getTime() < endTime);
         // return
@@ -57,7 +57,7 @@ exports.mainFunction = async(data) => {
             MB = createNewMB();
             MB.date = day.format('YYYY-MM-DD')
             }
-
+            //console.log(MB)
             if(MB.tradeEnd) {
               console.log("Trade already ended for the day")
               return res(true)
@@ -126,17 +126,13 @@ let coreLogic = async (data,MB) => {
               2
             )} ${getTimeForComment(data)}`
           );
-          MB.trades({
+          MB.trades.push({
             side: 'BUY',
             exec: MB.priceToTrade,
             isLast: false,
           })
-          // trades.push({
-          //   side: 'BUY',
-          //   exec: MB.priceToTrade,
-          //   isLast: false,
-          // });
-    
+          checkOrderStatusFromBroker('BUY')
+          // buy_order_executed
           //new High
           if (data[2] > MB.high) {
             MB.comments.push(
@@ -152,11 +148,13 @@ let coreLogic = async (data,MB) => {
         }
     
         if (data[3] <= MB.LB) {
-          //cancel Buy Order cnage status to 1
+          //cancel Buy Order change status to 1
           MB.status = 1;
           MB.comments.push(
             `LB Normal Buy Cancelled at  ${getTimeForComment(data)}`
           );
+          cancelOpenOrder('BUY',MB.openOrderId)
+          //cancel_buy_order
           //Place normal Buy/ Tgt buy order
           if (data[3] <= MB.low) {
             MB.status = 4;
@@ -168,6 +166,10 @@ let coreLogic = async (data,MB) => {
                 2
               )} ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId();
+            
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            //place_sell_order
           } else {
             MB.status = 5;
             MB.priceToTrade = data[3] - buySellDiff;
@@ -179,6 +181,12 @@ let coreLogic = async (data,MB) => {
                 MB.stopLoss
               } ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._idMB.isFirstTrade)
+
+            //place_sell_order
+
           }
     
           if (data[3] <= MB.low) {
@@ -204,9 +212,12 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('BUY',MB.openOrderId)
+          //cancel_buy_order
           MB.low = data[3];
           MB.allLow = data[3];
           setUpperBandAndLowerBand(data,MB);
+          //cancel_buy_order
           //set new low
           //set upper and lower band
         }
@@ -228,6 +239,7 @@ let coreLogic = async (data,MB) => {
               2
             )}  at ${getTimeForComment(data)}`
           );
+          //buy_order_executed
           MB.trades.push({
             side: 'BUY',
             exec: MB.priceToTrade,
@@ -251,6 +263,8 @@ let coreLogic = async (data,MB) => {
           MB.comments.push(
             `SL Reached cancel TGT Buy Order ${getTimeForComment(data)}`
           );
+          cancelOpenOrder('BUY',MB.openOrderId)
+          //cancel_buy_order
           if (data[3] <= MB.low) {
             //Normal Order
             MB.low = data[3];
@@ -267,6 +281,10 @@ let coreLogic = async (data,MB) => {
                 2
               )} at ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+            // place_sell_order
           } else {
             MB.status = 5;
             setTargetFunction('SELL',MB);
@@ -279,7 +297,9 @@ let coreLogic = async (data,MB) => {
                 2
               )} at ${getTimeForComment(data)}`
             );
-    
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+            //place_sell_order
             //Target Order
           }
           //check new Low
@@ -299,11 +319,14 @@ let coreLogic = async (data,MB) => {
               2
             )} ${getTimeForComment(data)}`
           );
+          // sell_order_executed
           MB.trades.push({
             side: 'SELL',
             exec: MB.priceToTrade,
             isLast: false,
           })
+          MB.openOrderId = generateUniqId();
+          placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
           // trades.push({
           //   side: 'SELL',
           //   exec: MB.priceToTrade,
@@ -331,6 +354,8 @@ let coreLogic = async (data,MB) => {
           MB.comments.push(
             `UB Normal Sell Cancelled at  ${getTimeForComment(data)}`
           );
+          cancelOpenOrder('SELL',MB.openOrderId)
+          //cancel_sell_order
     
           //Place normal Buy/ Tgt buy order
           if (data[2] >= MB.high) {
@@ -343,6 +368,9 @@ let coreLogic = async (data,MB) => {
                 MB.priceToTrade
               } ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            //place_buy_order
           } else {
             // console.log("TGT Buy order", data)
             MB.status = 3;
@@ -355,6 +383,9 @@ let coreLogic = async (data,MB) => {
                 MB.stopLoss
               } ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            //place_buy_order
           }
     
           if (data[2] >= MB.high) {
@@ -378,10 +409,12 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          //cancel_sell_order
           MB.status = 1;
           MB.high = data[2];
           MB.allHigh = data[2];
           setUpperBandAndLowerBand(data,MB);
+          cancelOpenOrder('SELL',MB.openOrderId)
         }
         //cancel Buy Order
         //check new low
@@ -400,6 +433,7 @@ let coreLogic = async (data,MB) => {
               2
             )}  at ${getTimeForComment(data)}`
           );
+          // sell_order_executed
           MB.trades.push({
             side: 'SELL',
             exec: MB.priceToTrade,
@@ -423,7 +457,8 @@ let coreLogic = async (data,MB) => {
           MB.comments.push(
             `SL Reached cancel TGT Sell Order ${getTimeForComment(data)}`
           );
-    
+          cancelOpenOrder('SELL',MB.openOrderId)
+          //cancel_sell_order
           if (data[2] >= MB.high) {
             //Normal Order
             MB.high = data[2];
@@ -440,6 +475,10 @@ let coreLogic = async (data,MB) => {
                 2
               )} at ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+
+            //place_buy_order
           } else {
             MB.status = 3;
             setTargetFunction('BUY',MB);
@@ -452,6 +491,11 @@ let coreLogic = async (data,MB) => {
                 2
               )} at ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+
+            //place_buy_order
             //Target Order
           }
           //check new Low
@@ -474,6 +518,10 @@ let coreLogic = async (data,MB) => {
                 2
               )} ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+
           } else {
             //SL Sell Target Order
             MB.status = 12;
@@ -491,7 +539,9 @@ let coreLogic = async (data,MB) => {
               )} ${getTimeForComment(data)}`
             );
           }
-    
+          MB.openOrderId = generateUniqId()
+          placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+
           //Low <= new Low
           if (data[3] < MB.low) {
             //set NEW low and reverse UB LB
@@ -530,6 +580,8 @@ let coreLogic = async (data,MB) => {
                 2
               )} ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
           } else {
             //SL Sell Target Order
             MB.status = 13;
@@ -546,6 +598,8 @@ let coreLogic = async (data,MB) => {
                 2
               )} ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
           }
     
           //Low <= new Low
@@ -597,6 +651,10 @@ let coreLogic = async (data,MB) => {
                 2
               )} ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+
           } else {
             //SL BUY Target Order
             MB.status = 16;
@@ -613,6 +671,9 @@ let coreLogic = async (data,MB) => {
                 2
               )} ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+
           }
     
           //High >= new High
@@ -652,6 +713,9 @@ let coreLogic = async (data,MB) => {
                 MB.slPriceToTrade
               } ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+
           } else {
             //SL BUY Target Order
             MB.status = 17;
@@ -666,6 +730,10 @@ let coreLogic = async (data,MB) => {
                 MB.stopLoss
               } ${getTimeForComment(data)}`
             );
+            MB.openOrderId = generateUniqId()
+
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+
           }
     
           //High >= new High
@@ -716,6 +784,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('SELL',MB.openOrderId)
           //set New High
           MB.high = data[2];
           MB.allHigh = data[2];
@@ -834,6 +903,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('SELL',MB.openOrderId)
           //set New High
           MB.high = data[2];
           MB.allHigh = data[2];
@@ -892,6 +962,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('SELL',MB.openOrderId)
           //Set target to new High
           MB.high = MB.target;
           setUpperBandAndLowerBand(data,MB);
@@ -948,6 +1019,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('BUY',MB.openOrderId)
           //set New Low
           MB.low = data[3];
           MB.allLow = data[3];
@@ -1010,6 +1082,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('BUY',MB.openOrderId)
           //Set target to new High
           MB.low = MB.target;
           setUpperBandAndLowerBand(data,MB);
@@ -1067,6 +1140,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('BUY',MB.openOrderId)
           //set New Low
           MB.low = data[3];
           MB.allLow = data[3];
@@ -1120,6 +1194,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
+          cancelOpenOrder('BUY',MB.openOrderId)
           //Set target to new low
           MB.low = MB.target;
           setUpperBandAndLowerBand(data,MB);
@@ -1188,6 +1263,10 @@ let checkToPlaceOrder = (data,MB) => {
           ).getMinutes()}`
         );
         MB.status = 3;
+        MB.openOrderId = generateUniqId()
+
+        placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade)
+        //place_buy_order
       } else {
         MB.status = 2;
         MB.comments.push(
@@ -1197,6 +1276,10 @@ let checkToPlaceOrder = (data,MB) => {
             data[0]
           ).getMinutes()}`
         );
+        MB.openOrderId = generateUniqId()
+
+        placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade)
+        //place_buy_order
       }
       MB.priceToTrade = customParseFloat(
         data[2] + buySellDiff
@@ -1219,6 +1302,11 @@ let checkToPlaceOrder = (data,MB) => {
             MB.stopLoss
           } ${getTimeForComment(data)}`
         );
+        MB.openOrderId = generateUniqId()
+
+        placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade);
+
+        //place_sell_order
       } else {
         MB.status = 4;
         MB.comments.push(
@@ -1226,6 +1314,10 @@ let checkToPlaceOrder = (data,MB) => {
             data[3] - buySellDiff
           }, ${getTimeForComment(data)}`
         );
+        MB.openOrderId = generateUniqId()
+
+        placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade)
+        //place_sell_order
       }
       MB.priceToTrade = customParseFloat(
         data[3] - buySellDiff
@@ -1263,8 +1355,8 @@ let checkToPlaceOrder = (data,MB) => {
 
 
   //Convert num to decimal with single
-let  customParseFloat = (value) => {
-    return parseFloat(value.toFixed(2));
+let  customParseFloat = (value, cus = 2) => {
+    return parseFloat(value.toFixed(cus));
 }
 
 let createNewMB = () =>{
@@ -1300,6 +1392,8 @@ let closeTrade = async(data) => {
       let MB = await DailyMarketWatch.findOne({date: isoDateString});
       //let data = await getCandles(isoDateString,token);
       let closePrice = data[1];
+      MB.openOrderId = generateUniqId()
+
       if (buySide.includes(MB.status))
        {
         // buy side open
@@ -1307,10 +1401,14 @@ let closeTrade = async(data) => {
           `TimeEnd Sell EXEC at open price ${closePrice}`
         );
         MB.trades.push({ side: 'SELL', exec: closePrice, isLast: true });
+        MB.openOrderId = generateUniqId()
+        placeOrderToBroker('SELL',closePrice.toFixed(),MB.openOrderId,MB._id,false,true);
+
       } else if (sellSide.includes(MB.status)) {
         // Sell Side Open
         MB.comments.push(`TimeEnd Buy EXEC at open price ${closePrice}`);
         MB.trades.push({ side: 'BUY', exec: closePrice, isLast: true });
+        placeOrderToBroker('BUY',closePrice.toFixed(),MB.openOrderId,MB._id,false,true);
       } else {
         MB.comments.push(
           `Cancell all the pending orders and close the trade`
@@ -1400,6 +1498,9 @@ let getTimeForComment = (data) => {
     ).getMinutes()}`;
   }
 
+let generateUniqId = () => {
+  return parseInt((Math.random() * Date.now()).toFixed());
+} 
 //High =2, low  = 3
 
 // enum Order {

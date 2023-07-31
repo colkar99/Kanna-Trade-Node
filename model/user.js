@@ -16,6 +16,10 @@ const UserSchema = mongoose.Schema(
     slLimitPercent: { type: Number, default: 0.2 },
     subscribeTimeFrame: { type: Number, default: 2 },
     token: { type: String },
+    isAdmin:{type: Boolean, required: true, default: false},
+    brokerUserId:{type: String,required: true, default: ''},
+    tradingQuantity:{type: Number,required: true,default: 15},
+    tradingSymbol: {type: String,required: ''}
     //
   },
   { timestamps: true }
