@@ -111,16 +111,7 @@ var event1 = schedule.scheduleJob("0 16 * * *",async function() {
   }
 });
 
-//Server Testing purpose
-var event = schedule.scheduleJob("2 */1 * * * *", async function() {
-  try {
-    let user = await User.findOne({email: process.env.ADMIN_MAIL})
-    let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
-    console.log(candles)
-  } catch (error) {
-    console.log("Error happend in the server testing",error)
-  }
-})
+
 
 
 
