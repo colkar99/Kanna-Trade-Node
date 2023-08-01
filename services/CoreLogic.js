@@ -1,19 +1,15 @@
 
 var moment = require('moment'); // require
 
-const {getCandles,getFullCandle,placeOrderToBroker,checkOrderStatusFromBroker,cancelOpenOrder} = require('./apiService')
-const DAYS = ['sunday','monday','tuesday','wednesday','thrusday','friday','saturday'];
+const {placeOrderToBroker,checkOrderStatusFromBroker,cancelOpenOrder} = require('./apiService')
+//const DAYS = ['sunday','monday','tuesday','wednesday','thrusday','friday','saturday'];
 const DailyMarketWatch = require('../model/DailyMarketWatch');
-const startTime = '09:30:00+0530';
-const endTime = '15:15:00+0530';
-const reached = false;
-const today = new Date();
-const token = 'enctoken 8TvIi2vchLg1bvBJrYmXmLEEe+L3hSkZfBjrZZokWLktHcLqELIwKMdj7c1lNFh+WyjM2qP+eJdVjr6XHmO8fvhsiistbF2n9P0o5zDRtKQzP5GMIFBsOw==';
-const lastCandelTime = new Date();
-const isOwnData = false;
+
+//const lastCandelTime = new Date();
+//const isOwnData = false;
 
 //////////////////////////////////
-const buySellDiff = 45;
+const buySellDiff = 2;
 const buySide  = [6, 7, 10, 11, 12, 13];
 const sellSide = [8, 9, 14, 15, 16, 17];
 
