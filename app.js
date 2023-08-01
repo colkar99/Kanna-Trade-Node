@@ -97,7 +97,7 @@ var event = schedule.scheduleJob("2 */5 * * * *", async function() {
 });
 
 // use this to remove token etc
-var event1 = schedule.scheduleJob("0 19 * * *",async function() {
+var event1 = schedule.scheduleJob("0 20 * * *",async function() {
   console.log('This runs every day 7pm hour');
   try{
     let user = await User.findOne({email: process.env.ADMIN_MAIL})

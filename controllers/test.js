@@ -19,7 +19,7 @@ exports.getCandles = async(req,res,next) => {
     
         if (!isOwnData) {
           if (!token) return res.status(400).send("Token is missing");
-          const url = `https://kite.zerodha.com/oms/instruments/historical/8963586/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`;
+          const url = `https://kite.zerodha.com/oms/instruments/historical/3660545/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`;
           const config = {
             headers: {
               authorization: token,
