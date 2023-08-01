@@ -97,21 +97,25 @@ var event = schedule.scheduleJob("2 */5 * * * *", async function() {
 });
 
 // use this to remove token etc
-var event1 = schedule.scheduleJob("0 20 * * *",async function() {
+var event1 = schedule.scheduleJob("0 21 * * *",async function() {
   console.log('This runs every day 7pm hour');
   try{
-    let user = await User.findOne({email: process.env.ADMIN_MAIL})
+    let user = await User.findOne({email: process.env.ADMIN_MAIL});
+    if(user){
+      user.token = '',
+      await user.save();
+    }
     let daily = await DailyMarketWatch.findOne({ date: moment().format('YYYY-MM-DD') });
+    if(daily) {
     daily.openOrderId = '';
-    user.token = '',
-    await user.save()
     await daily.save()
+    }
     console.log('Cleanup runned successfully');
-
   } catch(error){
     console.log("Error happend in renove token from user function: ",error)
   }
 });
+
 
 
 
