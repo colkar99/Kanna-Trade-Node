@@ -126,6 +126,7 @@ let coreLogic = async (data,MB) => {
               2
             )} ${getTimeForComment(data)}`
           );
+          MB.executedTradeCount += 1;
           MB.trades.push({
             side: 'BUY',
             exec: MB.priceToTrade,
@@ -153,7 +154,7 @@ let coreLogic = async (data,MB) => {
           MB.comments.push(
             `LB Normal Buy Cancelled at  ${getTimeForComment(data)}`
           );
-          cancelOpenOrder('BUY',MB.openOrderId)
+          cancelOpenOrder('BUY',MB.openOrderId,MB._id)
           //cancel_buy_order
           //Place normal Buy/ Tgt buy order
           if (data[3] <= MB.low) {
@@ -168,7 +169,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             
-            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
             //place_sell_order
           } else {
             MB.status = 5;
@@ -183,7 +184,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
 
-            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._idMB.isFirstTrade)
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,date[0])
 
             //place_sell_order
 
@@ -212,7 +213,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('BUY',MB.openOrderId)
+          cancelOpenOrder('BUY',MB.openOrderId,MB._id)
           //cancel_buy_order
           MB.low = data[3];
           MB.allLow = data[3];
@@ -232,6 +233,7 @@ let coreLogic = async (data,MB) => {
         if (data[2] >= MB.priceToTrade) {
           MB.isFirstTrade = false;
           MB.status = 7;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `TGT Buy Order EXEC ${MB.priceToTrade.toFixed(
               2
@@ -263,7 +265,7 @@ let coreLogic = async (data,MB) => {
           MB.comments.push(
             `SL Reached cancel TGT Buy Order ${getTimeForComment(data)}`
           );
-          cancelOpenOrder('BUY',MB.openOrderId)
+          cancelOpenOrder('BUY',MB.openOrderId,MB._id)
           //cancel_buy_order
           if (data[3] <= MB.low) {
             //Normal Order
@@ -283,7 +285,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
 
-            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
             // place_sell_order
           } else {
             MB.status = 5;
@@ -298,7 +300,7 @@ let coreLogic = async (data,MB) => {
               )} at ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
             //place_sell_order
             //Target Order
           }
@@ -320,13 +322,15 @@ let coreLogic = async (data,MB) => {
             )} ${getTimeForComment(data)}`
           );
           // sell_order_executed
+          MB.executedTradeCount += 1;
+
           MB.trades.push({
             side: 'SELL',
             exec: MB.priceToTrade,
             isLast: false,
           })
           MB.openOrderId = generateUniqId();
-          placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+          //placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade,data[0]);
           // trades.push({
           //   side: 'SELL',
           //   exec: MB.priceToTrade,
@@ -354,7 +358,7 @@ let coreLogic = async (data,MB) => {
           MB.comments.push(
             `UB Normal Sell Cancelled at  ${getTimeForComment(data)}`
           );
-          cancelOpenOrder('SELL',MB.openOrderId)
+          cancelOpenOrder('SELL',MB.openOrderId,MB._id)
           //cancel_sell_order
     
           //Place normal Buy/ Tgt buy order
@@ -369,7 +373,7 @@ let coreLogic = async (data,MB) => {
               } ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
             //place_buy_order
           } else {
             // console.log("TGT Buy order", data)
@@ -384,7 +388,7 @@ let coreLogic = async (data,MB) => {
               } ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
             //place_buy_order
           }
     
@@ -414,7 +418,7 @@ let coreLogic = async (data,MB) => {
           MB.high = data[2];
           MB.allHigh = data[2];
           setUpperBandAndLowerBand(data,MB);
-          cancelOpenOrder('SELL',MB.openOrderId)
+          cancelOpenOrder('SELL',MB.openOrderId,MB._id)
         }
         //cancel Buy Order
         //check new low
@@ -426,6 +430,7 @@ let coreLogic = async (data,MB) => {
         if (data[3] <= MB.priceToTrade) {
           MB.isFirstTrade = false;
           MB.status = 9;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `TGT Sell Order EXEC ${MB.priceToTrade.toFixed(
               2
@@ -457,7 +462,7 @@ let coreLogic = async (data,MB) => {
           MB.comments.push(
             `SL Reached cancel TGT Sell Order ${getTimeForComment(data)}`
           );
-          cancelOpenOrder('SELL',MB.openOrderId)
+          cancelOpenOrder('SELL',MB.openOrderId,MB._id)
           //cancel_sell_order
           if (data[2] >= MB.high) {
             //Normal Order
@@ -476,7 +481,7 @@ let coreLogic = async (data,MB) => {
               )} at ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
 
             //place_buy_order
           } else {
@@ -493,7 +498,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
 
-            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+            placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
 
             //place_buy_order
             //Target Order
@@ -520,7 +525,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
 
-            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade)
+            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
 
           } else {
             //SL Sell Target Order
@@ -540,7 +545,7 @@ let coreLogic = async (data,MB) => {
             );
           }
           MB.openOrderId = generateUniqId()
-          placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+          placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
           //Low <= new Low
           if (data[3] < MB.low) {
@@ -581,7 +586,7 @@ let coreLogic = async (data,MB) => {
               )} ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
           } else {
             //SL Sell Target Order
             MB.status = 13;
@@ -599,7 +604,7 @@ let coreLogic = async (data,MB) => {
               )} ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
           }
     
           //Low <= new Low
@@ -653,7 +658,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
 
-            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
           } else {
             //SL BUY Target Order
@@ -672,7 +677,7 @@ let coreLogic = async (data,MB) => {
               )} ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
           }
     
@@ -714,7 +719,7 @@ let coreLogic = async (data,MB) => {
               } ${getTimeForComment(data)}`
             );
             MB.openOrderId = generateUniqId()
-            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
           } else {
             //SL BUY Target Order
@@ -732,7 +737,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
 
-            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade);
+            placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
           }
     
@@ -784,7 +789,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('SELL',MB.openOrderId)
+          cancelOpenOrder('SELL',MB.openOrderId,MB._id)
           //set New High
           MB.high = data[2];
           MB.allHigh = data[2];
@@ -802,6 +807,7 @@ let coreLogic = async (data,MB) => {
           MB.slOrderStatus = 1;
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `Stoploss Normal Sell order EXEC at ${
               MB.priceToTrade
@@ -860,6 +866,7 @@ let coreLogic = async (data,MB) => {
           MB.slOrderStatus = 1;
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `Stoploss Normal Sell order EXEC at ${
               MB.priceToTrade
@@ -903,7 +910,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('SELL',MB.openOrderId)
+          cancelOpenOrder('SELL',MB.openOrderId,MB._id)
           //set New High
           MB.high = data[2];
           MB.allHigh = data[2];
@@ -921,6 +928,7 @@ let coreLogic = async (data,MB) => {
           //Switf sl Target sell to main order
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `Stoploss Target Sell order EXEC at ${
               MB.priceToTrade
@@ -962,7 +970,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('SELL',MB.openOrderId)
+          cancelOpenOrder('SELL',MB.openOrderId,MB._id)
           //Set target to new High
           MB.high = MB.target;
           setUpperBandAndLowerBand(data,MB);
@@ -978,6 +986,7 @@ let coreLogic = async (data,MB) => {
           //Switf sl Target sell to main order
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `Stoploss Target Sell order EXEC at ${
               MB.priceToTrade
@@ -1019,7 +1028,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('BUY',MB.openOrderId)
+          cancelOpenOrder('BUY',MB.openOrderId,MB._id)
           //set New Low
           MB.low = data[3];
           MB.allLow = data[3];
@@ -1037,6 +1046,7 @@ let coreLogic = async (data,MB) => {
           MB.slOrderStatus = 1;
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `Stoploss Normal Buy order EXEC at ${
               MB.priceToTrade
@@ -1082,7 +1092,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('BUY',MB.openOrderId)
+          cancelOpenOrder('BUY',MB.openOrderId,MB._id)
           //Set target to new High
           MB.low = MB.target;
           setUpperBandAndLowerBand(data,MB);
@@ -1098,6 +1108,7 @@ let coreLogic = async (data,MB) => {
           MB.slOrderStatus = 1;
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `Stoploss Normal Buy order EXEC at ${
               MB.priceToTrade
@@ -1140,7 +1151,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('BUY',MB.openOrderId)
+          cancelOpenOrder('BUY',MB.openOrderId,MB._id)
           //set New Low
           MB.low = data[3];
           MB.allLow = data[3];
@@ -1158,6 +1169,7 @@ let coreLogic = async (data,MB) => {
           //Switf sl Target sell to main order
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
           MB.comments.push(
             `Stoploss Target Buy order EXEC at ${
               MB.priceToTrade
@@ -1194,7 +1206,7 @@ let coreLogic = async (data,MB) => {
               data
             )}`
           );
-          cancelOpenOrder('BUY',MB.openOrderId)
+          cancelOpenOrder('BUY',MB.openOrderId,MB._id)
           //Set target to new low
           MB.low = MB.target;
           setUpperBandAndLowerBand(data,MB);
@@ -1210,6 +1222,8 @@ let coreLogic = async (data,MB) => {
           //Switf sl Target buy to main order
           MB.priceToTrade = MB.slPriceToTrade;
           MB.slPriceToTrade = 0;
+          MB.executedTradeCount += 1;
+
           MB.comments.push(
             `Stoploss Target buy order EXEC at ${
               MB.priceToTrade
@@ -1265,7 +1279,7 @@ let checkToPlaceOrder = (data,MB) => {
         MB.status = 3;
         MB.openOrderId = generateUniqId()
 
-        placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade)
+        placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
         //place_buy_order
       } else {
         MB.status = 2;
@@ -1278,7 +1292,7 @@ let checkToPlaceOrder = (data,MB) => {
         );
         MB.openOrderId = generateUniqId()
 
-        placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade)
+        placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
         //place_buy_order
       }
       MB.priceToTrade = customParseFloat(
@@ -1304,7 +1318,7 @@ let checkToPlaceOrder = (data,MB) => {
         );
         MB.openOrderId = generateUniqId()
 
-        placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade);
+        placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
         //place_sell_order
       } else {
@@ -1316,7 +1330,7 @@ let checkToPlaceOrder = (data,MB) => {
         );
         MB.openOrderId = generateUniqId()
 
-        placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),0),MB.openOrderId,MB._id,MB.isFirstTrade)
+        placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
         //place_sell_order
       }
       MB.priceToTrade = customParseFloat(
@@ -1392,23 +1406,37 @@ let closeTrade = async(data) => {
       let MB = await DailyMarketWatch.findOne({date: isoDateString});
       //let data = await getCandles(isoDateString,token);
       let closePrice = data[1];
-      MB.openOrderId = generateUniqId()
+      //MB.openOrderId = generateUniqId()
+
 
       if (buySide.includes(MB.status))
        {
+        if(MB.openOrderId != ''){
+          //one buy order is in open state close it before placing exit order
+          await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+        }
         // buy side open
         MB.comments.push(
           `TimeEnd Sell EXEC at open price ${closePrice}`
         );
         MB.trades.push({ side: 'SELL', exec: closePrice, isLast: true });
         MB.openOrderId = generateUniqId()
-        placeOrderToBroker('SELL',closePrice.toFixed(),MB.openOrderId,MB._id,false,true);
+        MB.executedTradeCount += 1;
+        console.log('Time up cancel all pending order and execute exit order')
+        placeOrderToBroker('SELL',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
 
       } else if (sellSide.includes(MB.status)) {
         // Sell Side Open
+        if(MB.openOrderId != ''){
+          //one buy order is in open state close it before placing exit order
+          await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+        }
         MB.comments.push(`TimeEnd Buy EXEC at open price ${closePrice}`);
         MB.trades.push({ side: 'BUY', exec: closePrice, isLast: true });
-        placeOrderToBroker('BUY',closePrice.toFixed(),MB.openOrderId,MB._id,false,true);
+        MB.executedTradeCount += 1;
+        console.log('Time up cancel all pending order and execute exit order')
+        MB.openOrderId = generateUniqId()
+        placeOrderToBroker('BUY',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
       } else {
         MB.comments.push(
           `Cancell all the pending orders and close the trade`

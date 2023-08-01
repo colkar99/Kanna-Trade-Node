@@ -19,7 +19,9 @@ const UserSchema = mongoose.Schema(
     isAdmin:{type: Boolean, required: true, default: false},
     brokerUserId:{type: String,required: true, default: ''},
     tradingQuantity:{type: Number,required: true,default: 15},
-    tradingSymbol: {type: String,required: ''}
+    tradingSymbol: {type: String,required: true},
+    session_token:{type: String},
+    instrumentId: {type:String,required: true}
     //
   },
   { timestamps: true }

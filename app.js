@@ -6,8 +6,10 @@ var bodyParser = require("body-parser");
 var mongoose = require('mongoose')
 const schedule = require('node-schedule');
 var moment = require('moment'); // require
-var token = 'enctoken 4eEaODRaOWMQMzxAm6WcgifDEjYzp1xKWJQBAwKB1El82DYmR+5x8difuZbHHlkGgFYxtFW3jwOn1iHpUzywZ937Wv+H1mMrPIQYCTFufXzXxjd8qkulEg==';
-var apiService = require('./services/apiService');
+
+var {placeOrderToBroker,cancelOpenOrder,getCandles} = require('./services/apiService');
+var {kiteHandShake,getHistoricalData,placeOrder,checkOrderExecutedOrNot,} = require('./services/kiteService');
+
 
 
 
@@ -17,14 +19,18 @@ var apiService = require('./services/apiService');
 
 var userRouter = require('./router/user');
 var testRouter = require('./router/test');
+var kiteRouter = require('./router/kite');
+
 var Core = require('./services/CoreLogic');
 var Trade = require('./model/Trade');
+var User = require('./model/user');
+
 
 
 
 app.use(cors());
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // parse application/json
 app.use(bodyParser.json());
@@ -36,31 +42,14 @@ mongoose.connect(process.env.MONGODB, {
   })
   .then(async(res) => {
     console.log("db connected successfully")
-
-    // let interval = setInterval(async() => {
-    //   try{
-    //     let result = await apiService.getCandles(moment().add(-1 ,'days').format('YYYY-MM-DD'),token)
-    //     console.log(result);
-    //     for(let i = 0; i < result.length;i++){
-    //      const contents = await Core.mainFunction(result[i]);
-    //      console.log(contents)
-    //     }
-    //   }catch(err){
-    //     console.log(err)
-    //   }
-    // },3000)
-    
-        for(let i = 0; i < data.length;i++){
-         const contents = await Core.mainFunction(data[i]);
-        //  console.log(contents)
-        }  
- 
   })
   .catch((err) => console.log(err));
 //////
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/test", testRouter);
+app.use("/api/v1/kite", kiteRouter);
+
 
 
 
@@ -71,43 +60,130 @@ app.listen(process.env.PORT || 3000, () => {
   console.log(`Doctor Backend running environment is ${process.env.NODE_ENV}`);
 });
 
-// const job = schedule.scheduleJob('20 9 * * *', function(){
-//   //skip for saturday and sunday
-//   if(moment().day() == 6 || moment().day() == 0) return;
 
-//   let startTime = moment({ hour:9, minute:20 });
-//   let endTime = moment({ hour:15, minute:25 });
 
-//   let interval = setInterval(async() => {
-//     console.log('Interval Triggered');
-//     if(endTime.format() == moment().format()){
-
-//       clearInterval(interval);
-//       console.log("Time up close trade");
-//     } 
-//   },4000)
-// });
-
-let val =moment('2023-07-29T15:25:00+0530').set({ hour:9, minute:25 });
-let val2 = moment('2023-07-29T15:25:00+0530');
-
-console.log(val.add(-1,'d'))
 const DailyMarketWatch = require('./model/DailyMarketWatch');
 
-// async function testing(){
-//   let datas = await DailyMarketWatch.find();
-//   console.log(datas.length)
-//   let count = 0
-//   datas.forEach((data) => {
-//     count += data.totalPointsEarned;
-//   })
-//   console.log(count * 30)
-// }
-// testing()
 
-var event = schedule.scheduleJob("2 */5 * * * *", function() {
-  console.log('This runs every 5 minutes');
-  console.log("Time now:" ,moment().format())
+
+//Run on every 5 mins
+let interval;
+var event = schedule.scheduleJob("2 */5 * * * *", async function() {
+  try {
+    console.log("Requesting Candle for Every 5 mins:" ,moment().format())
+    let startTime = moment(data[0]).set({ hour:9, minute:25 });
+    let endTime = moment(data[0]).set({ hour:15, minute:25 });
+    let dateNow = moment();
+    clearInterval(interval);
+    if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
+      console.log('Time started:',moment());
+      let user = await User.findOne({email: process.env.ADMIN_MAIL})
+      let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
+
+      for(let i = 0; i < candles.length; i++){
+        await Core.mainFunction(candles[i]);
+      }
+      //Run Every 10 seconds to check is order executed or not
+      interval = setInterval(async() => {
+        await checkOrderExecutedOrNot()
+      //Check the exection order and update the data accordingly
+      },10000)
+    } 
+  } catch (error) {
+    console.log("Main function check if any error happens:",error)
+  }
+
+
 });
+
+// use this to remove token etc
+var event1 = schedule.scheduleJob("0 16 * * *",async function() {
+  console.log('This runs every day 16 hour');
+  try{
+    let user = await User.findOne({email: process.env.ADMIN_MAIL})
+    let daily = await DailyMarketWatch.findOne({ date: moment().format('YYYY-MM-DD') });
+    daily.openOrderId = '';
+    user.token = '',
+    await user.save()
+    await daily.save()
+  } catch(error){
+    console.log("Error happend in renove token from user function: ",error)
+  }
+});
+
+//Server Testing purpose
+var event = schedule.scheduleJob("2 */1 * * * *", async function() {
+  try {
+    let user = await User.findOne({email: process.env.ADMIN_MAIL})
+    let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
+    console.log(candles)
+  } catch (error) {
+    console.log("Error happend in the server testing",error)
+  }
+})
+
+
+
+
+
+// async function test(){
+//   //kiteHandShake();
+//   //getHistoricalData(8963586,'5minute',moment().format('YYYY-MM-DD'),moment().format('YYYY-MM-DD'))
+//   // 64c7b3355abfba60fba62186
+//   //placeOrderTesting()
+//  // await placeOrderToBroker('BUY',9,551403430378,'64c7b3355abfba60fba62186',true,moment().format('YYYY-MM-DD'),false)
+// // placeOrder("","","","","","","");
+//  // await cancelOpenOrder('BUY',230801002391393,'64c7b3355abfba60fba62186')
+//  await checkOrderExecutedOrNot();
+
+// }
+// test()
+
+
+//To add new instrument update the following column in user table
+//tradingSymbol,instrumentId,tradingQuantity
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// async function createUser() {
+//   let newUser = await new User();
+//   newUser.subscriptionStatus= false,
+//   newUser.isActive= true,
+//   newUser.isAdmin = true,
+//   newUser.brokerUserId=  'WB5864',
+//   newUser.tradingQuantity = 15,
+//   newUser.name = "Karthik raj",
+//   newUser.email= "colkar99@gmail.com"
+//   newUser.phone = "8056756218",
+//   newUser.phoneCode = "+91",
+//   newUser.tradingSymbol = "BANKNIFTY23AUGFUT",
+//   newUser.password = "colkar.99"
+
+//   newUser.save()
+//   console.log("User",newUser)
+// }
+
+// createUser()
 
 

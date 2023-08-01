@@ -14,7 +14,7 @@ const TradeSchema = mongoose.Schema(
     quantity: {type: Number,required: true},
     trigger_price: {type: Number,required: true},
     order_id:{type: Number,required: true},
-    status: {type: String,enum:['ORDER_PLACED'],required: true},
+    status: {type: String,enum:['ORDER_PLACED',"CANCELLED","COMPLETE"],required: true},
     order_date:{type: String,required: true},
     order_exe_price: {type: Number,required: true,default: 0},
     openOrderRefId:{type:String},

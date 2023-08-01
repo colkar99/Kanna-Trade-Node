@@ -24,7 +24,8 @@ const DailyMarketWatchSchema = mongoose.Schema(
     lastCandleTimeStamp: {type: String, required: true},
     totalPointsEarned: {type: Number,required: true,default: 0},
     tradeEnd: {type: Boolean,required: true,default: false},
-    openOrderId: {type: String}
+    openOrderId: {type: String},
+    executedTradeCount: {type: Number, required: true,default: 0}
   },
   { timestamps: true }
 );

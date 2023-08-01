@@ -2,46 +2,43 @@ const axios = require("axios");
 const moment = require('moment')
 const User = require('../model/user');
 const Trade = require('../model/Trade');
+const DailyMarketWatch = require('../model/DailyMarketWatch');
+
+const {placeOrder,cancelOpenOrder} = require('./kiteService');
 
 
 
 
-exports.getCandles = async(date,token) => {
+exports.getCandles = async(date,token,instrumentId,user_id) => {
     return new Promise(async(resolve,reject) => {
-        if (!token) return reject({status: 400,message:"Token is missing"});
-        const url = `https://kite.zerodha.com/oms/instruments/historical/8963586/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`;
-        const config = {
-          headers: {
-            authorization: token,
-          },
-        };
-        const response = await axios.get(url, config);
-        resolve(response.data.data.candles);
+        try {
+            if (!token) return reject({status: 400,message:"Token is missing"});
+            const url = `https://kite.zerodha.com/oms/instruments/historical/${instrumentId}/5minute?user_id=${user_id}&oi=1&from=${date}&to=${date}`;
+            const config = {
+              headers: {
+                authorization: token,
+              },
+            };
+            const response = await axios.get(url, config);
+            resolve(response.data.data.candles);
+        } catch (error) {
+            console.log(error)
+            reject(error)
+        }
+      
     })
 }
 
-exports.getFullCandles = async(date,token) => {
-    return new Promise(async(resolve,reject) => {
-        if (!token) return reject({status: 400,message:"Token is missing"});
-        const url = `https://kite.zerodha.com/oms/instruments/historical/8963586/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`;
-        const config = {
-          headers: {
-            authorization: token,
-          },
-        };
-        const response = await axios.get(url, config);
-        resolve(response.data.data.candles);
-    })
-}
 
-exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,isLastTrade = false) => {
+
+exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,date,isLastTrade = false,) => {
   return new Promise(async(res,rej) => {
     try {
 
       let user = await User.findOne({email: 'colkar99@gmail.com'});
       let Trade = createNewTrade();
-
-      if(isFirstTrade || isLastTrade) Trade.quantity = user.tradingQuantity;
+      console.log(date)
+      if(isFirstTrade == 0 || isLastTrade) Trade.quantity = user.tradingQuantity;
       else Trade.quantity = user.tradingQuantity * 2 ;
 
       Trade.transaction_type = side;
@@ -51,24 +48,33 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
       Trade.market_data_id = parentId;
       Trade.tradingsymbol = user.tradingSymbol;
       Trade.openOrderRefId = referenceId;
+      console.log(Trade);
 
-      if(side == 'BUY') {
-        // Place this order to kite and wait for response
-        //if response success save Order Id to existing Trade
-        //Save Trade()
+    let response = await placeOrder(Trade.transaction_type,Trade.tradingsymbol,Trade.quantity,Trade.trigger_price,user.brokerUserId,user.token)
+    // Response structure { status: 'success', data: { order_id: '230801001341992' } }
+    if(response.status == 'success'){
+        Trade.status = "ORDER_PLACED";
+        Trade.order_id = response.data.order_id;
+        await Trade.save();
+        await DailyMarketWatch.findByIdAndUpdate(
+            { _id: parentId },
+            {
+                openOrderId: response.data.order_id,
+            },
+            {
+              new: true,
+            }
+          );
 
+    }else if(response.status != 'success') {
+        setTimeout(() =>{
+            placeOrderToBroker(side,price,referenceId,parentId,isFirstTrade,date,isLastTrade = false)
+        } , 5000)
+        rej(false)
+    }
 
-        //place buy order
-        console.log(`Place Buy Order at: ${price} with Quantity: ${Trade.quantity}`)
-        //place sell order
-        // Place this order to kite and wait for response
-        //if response success save Order Id to existing Trade
-        //Save Trade()
-
-        console.log(`Placed Sell Order at: ${price} with Quantity: ${Trade.quantity}`)
-
-      }
-      res(true)
+    console.warn(`Place ${side} Order at: ${price} with Quantity: ${Trade.quantity}`)
+    res(true)
 
     } catch (error) {
       console.log(error);
@@ -77,57 +83,48 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
   })
 
 }
-exports.cancelOpenOrder = async(side,referenceId) => {
-  console.log(`Cancelling the  Open Order ${side}`)
+
+exports.cancelOpenOrder = async(side,referenceId,parentId) => {
+    return new Promise(async(res,rej) =>{
+        try {
+            console.error(`Cancelling the  Open Order ${side}`)
+            let trade = await Trade.findOne({order_id: referenceId});
+            let user = await User.findOne({ email: process.env.ADMIN_MAIL });
+
+
+            let order = await cancelOpenOrder(referenceId,user.token);
+            console.log(order);
+
+            if(order.status == 'success'){
+            trade.status = 'CANCELLED',
+             await trade.save();
+             await DailyMarketWatch.findByIdAndUpdate(
+                { _id: parentId },
+                {
+                    openOrderId: '',
+                },
+                {
+                  new: true,
+                }
+              );
+               
+            }else{
+                setTimeout(() => {
+                    cancelOpenOrder(side,referenceId,parentId)
+                },5000)
+                rej(false)
+                return
+            }
+            res(true)
+        } catch (error) {
+            console.log(error);
+            rej(error)
+        }
+    })
 }
 
-exports.checkOrderStatusFromBroker = async(side) => {
-  if(side == 'BUY') {
-    //place buy order
-    console.log('Place Buy Order at:', price)
-  }else if(side == 'SELL'){
-    //place sell order
-    console.log('Place Sell Order at:', price)
 
-  }
-}
 
-let createNewTrade = () => {
-  return new Trade({
-    // variety: 'regular',
-    // order_type: 'SL-M',
-    // product: 'MIS',
-    // validity: 'DAY',
-    // tradingsymbol: 'NSE',
-    // order_exe_price: 0,
-    // _id: new ObjectId("64c77e20067309335e9388db")
-  })
-}
 
-//order Placing and cancelling details
-//155 => cancel buy order
-//163 => sell order placed
-//180 => sell orde placed
-//203 => cancel buy order
-//227 => TGT buy order exe place SL sell Order(doubt)
-//255 SL reached cancel open TGT buy order
-//270 SL reached place normal sell order
-//279 SL reached place tgt sell order
-//338 cancel normal sell order
-//349 Place normal buy order
-// 360 TGT buy order place
-// 385 cancel normal sell order
-// 435 SL reached cancel TGT sell order
-// 450 SL reached normal buy order placed
-// 459 SL reached Place TGT buy order
-//486 Sell order placed
-//498 TGT sell  order placed
-// 542 normal sell order placed
-//554 SL reached TGT Sell order placed
-//609 Normal sell order placed
-//621 TGT buy order placed
-//664 SL reached normal sell order placed
-//676 SL Reached TGT Buy order placed
-// 728 cancel SL Normal sell order
-// 788 TGT reached cancel sell order
-//960 cancell buy order
+
+
