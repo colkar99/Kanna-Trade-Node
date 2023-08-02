@@ -117,7 +117,7 @@ var event1 = schedule.scheduleJob("0 18 * * *",async function() {
 });
 
 
-
+//placeOrderToBroker("SELL",256.30,123123123123,'64c9d71ad3f57fff84d83d7d',true,moment().format('YYYY-MM-DD'),false);
 
 //To add new instrument update the following column in user table
 //tradingSymbol,instrumentId,tradingQuantity

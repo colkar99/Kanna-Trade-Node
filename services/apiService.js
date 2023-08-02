@@ -124,6 +124,18 @@ exports.cancelOpenOrder = async(side,referenceId,parentId) => {
 }
 
 
+let createNewTrade = () => {
+  return new Trade({
+    // variety: 'regular',
+    // order_type: 'SL-M',
+    // product: 'MIS',
+    // validity: 'DAY',
+    // tradingsymbol: 'NSE',
+    // order_exe_price: 0,
+    // _id: new ObjectId("64c77e20067309335e9388db")
+  })
+}
+
 
 
 
