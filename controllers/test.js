@@ -1,5 +1,6 @@
 const axios = require("axios");
 var bankniftyData = require("../datas/banknifty.json");
+const User = require('../model/user');
  
 
 exports.test = async(req,res,next) => {
@@ -16,10 +17,11 @@ exports.getCandles = async(req,res,next) => {
         const date = req.body.date;
         const token = req.body.token;
         const isOwnData = req.body.isOwnData;
+        const user = await User.findOne({email:process.env.ADMIN_MAIL})
     
         if (!isOwnData) {
           if (!token) return res.status(400).send("Token is missing");
-          const url = `https://kite.zerodha.com/oms/instruments/historical/3660545/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`;
+          const url = `https://kite.zerodha.com/oms/instruments/historical/${user.instrumentId}/5minute?user_id=WB5864&oi=1&from=${date}&to=${date}`;
           const config = {
             headers: {
               authorization: token,
