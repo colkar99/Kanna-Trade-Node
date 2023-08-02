@@ -34,7 +34,6 @@ exports.getCandles = async(date,token,instrumentId,user_id) => {
 exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,date,isLastTrade = false,) => {
   return new Promise(async(res,rej) => {
     try {
-
       let user = await User.findOne({email: 'colkar99@gmail.com'});
       let Trade = createNewTrade();
       console.log(date)
@@ -48,6 +47,10 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
       Trade.market_data_id = parentId;
       Trade.tradingsymbol = user.tradingSymbol;
       Trade.openOrderRefId = referenceId;
+      if(isLastTrade){
+        Trade.trigger_price = 0;
+        Trade.order_type = "MARKET";
+      }
       console.log(Trade);
 
     let response = await placeOrder(Trade.transaction_type,Trade.tradingsymbol,Trade.quantity,Trade.trigger_price,user.brokerUserId,user.token)

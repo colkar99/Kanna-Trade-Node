@@ -6,6 +6,8 @@ var bodyParser = require("body-parser");
 var mongoose = require('mongoose')
 const schedule = require('node-schedule');
 var moment = require('moment'); // require
+const IS_TEST_MODE = process.env.IS_TEST_MODE;
+
 
 var {placeOrderToBroker,cancelOpenOrder,getCandles} = require('./services/apiService');
 var {kiteHandShake,getHistoricalData,placeOrder,checkOrderExecutedOrNot,} = require('./services/kiteService');
@@ -35,8 +37,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // parse application/json
 app.use(bodyParser.json());
 
+let mongoUrl = IS_TEST_MODE != 'YES' ? process.env.MONGODB_PROD : process.env.MONGODB_UAT
 
-mongoose.connect(process.env.MONGODB, {
+mongoose.connect(mongoUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -68,14 +71,14 @@ const DailyMarketWatch = require('./model/DailyMarketWatch');
 
 //Run on every 5 mins
 let interval;
-var event = schedule.scheduleJob("2 */5 * * * *", async function() {
+var event = schedule.scheduleJob("2 */1 * * * *", async function() {
   try {
     console.log("Requesting Candle for Every 5 mins:" ,moment().format())
-    let startTime = moment().set({ hour:9, minute:25 });
+    let startTime = moment().set({ hour:9, minute:20 });
     let endTime = moment().set({ hour:15, minute:25 });
     let dateNow = moment();
     clearInterval(interval);
-    if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
+    if(true ){
       console.log('Time started:',moment());
       let user = await User.findOne({email: process.env.ADMIN_MAIL})
       let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
@@ -84,10 +87,13 @@ var event = schedule.scheduleJob("2 */5 * * * *", async function() {
         await Core.mainFunction(candles[i]);
       }
       //Run Every 10 seconds to check is order executed or not
-      interval = setInterval(async() => {
-        await checkOrderExecutedOrNot()
-      //Check the exection order and update the data accordingly
-      },10000)
+      if(IS_TEST_MODE != 'YES'){
+        interval = setInterval(async() => {
+          await checkOrderExecutedOrNot()
+        //Check the exection order and update the data accordingly
+        },10000)
+      }
+
     } 
   } catch (error) {
     console.log("Main function check if any error happens:",error)
@@ -112,7 +118,7 @@ var event1 = schedule.scheduleJob("0 18 * * *",async function() {
     }
     console.log('Cleanup runned successfully');
   } catch(error){
-    console.log("Error happend in renove token from user function: ",error)
+    console.log("Error happend in cleanup token from user function: ",error)
   }
 });
 
@@ -170,13 +176,17 @@ var event1 = schedule.scheduleJob("0 18 * * *",async function() {
 //   newUser.isActive= true,
 //   newUser.isAdmin = true,
 //   newUser.brokerUserId=  'WB5864',
-//   newUser.tradingQuantity = 15,
+//   newUser.tradingQuantity = 1,
 //   newUser.name = "Karthik raj",
 //   newUser.email= "colkar99@gmail.com"
 //   newUser.phone = "8056756218",
 //   newUser.phoneCode = "+91",
-//   newUser.tradingSymbol = "BANKNIFTY23AUGFUT",
+//   newUser.tradingSymbol = "PFC",
 //   newUser.password = "colkar.99"
+//   newUser.token = "enctoken iXGxGImIRsOj92sF+Df3xrnFxuOlqacXY8PEerAMqlYB8ly1xJIsEEPE2EpTI08r65OwEf4jpCs6R0xTI3Eq2l8zZ4NG/9ScS0bl1jAWuNzd+3vBCpoUTg==",
+//   newUser.instrumentId = "3660545",
+
+
 
 //   newUser.save()
 //   console.log("User",newUser)
