@@ -71,8 +71,8 @@ let interval;
 var event = schedule.scheduleJob("2 */5 * * * *", async function() {
   try {
     console.log("Requesting Candle for Every 5 mins:" ,moment().format())
-    let startTime = moment(data[0]).set({ hour:9, minute:25 });
-    let endTime = moment(data[0]).set({ hour:15, minute:25 });
+    let startTime = moment().set({ hour:9, minute:25 });
+    let endTime = moment().set({ hour:15, minute:25 });
     let dateNow = moment();
     clearInterval(interval);
     if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
