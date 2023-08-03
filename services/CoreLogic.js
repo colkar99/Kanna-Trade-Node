@@ -1,7 +1,7 @@
 
 var moment = require('moment'); // require
 
-const {placeOrderToBroker,checkOrderStatusFromBroker,cancelOpenOrder} = require('./apiService')
+const {placeOrderToBroker,cancelOpenOrder} = require('./apiService')
 //const DAYS = ['sunday','monday','tuesday','wednesday','thrusday','friday','saturday'];
 const DailyMarketWatch = require('../model/DailyMarketWatch');
 
@@ -101,13 +101,13 @@ let coreLogic = async (data,MB) => {
         MB.low = data[3];
         MB.allLow = data[3];
         MB.tradeStarted = true;
-        setUpperBandAndLowerBand(data,MB);
+        await setUpperBandAndLowerBand(data,MB);
         return res(true);
        }
       switch (MB.status) {
       case 1: {
         //No Trade
-        checkToPlaceOrder(data,MB);
+        await checkToPlaceOrder(data,MB);
         break;
       }
       case 2: {
@@ -128,7 +128,6 @@ let coreLogic = async (data,MB) => {
             exec: MB.priceToTrade,
             isLast: false,
           })
-          checkOrderStatusFromBroker('BUY')
           // buy_order_executed
           //new High
           if (data[2] > MB.high) {
@@ -139,7 +138,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.high = data[2];
             MB.allHigh = data[2];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
           return res(true);
         }
@@ -151,7 +150,7 @@ let coreLogic = async (data,MB) => {
             `LB Normal Buy Cancelled at  ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
 
           }
           //cancel_buy_order
@@ -168,13 +167,13 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
             }
             //place_sell_order
           } else {
             MB.status = 5;
             MB.priceToTrade = data[3] - buySellDiff;
-            setTargetFunction('BUY',MB);
+            await setTargetFunction('BUY',MB);
             MB.comments.push(
               `LB TGT SELL Order Placed at${MB.priceToTrade.toFixed(
                 2
@@ -184,7 +183,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-            placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,date[0])
+            await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,date[0])
 
             }
 
@@ -200,7 +199,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.low = data[3];
             MB.allLow = data[3];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
           return res(true);
         }
@@ -216,13 +215,13 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
 
           }
           //cancel_buy_order
           MB.low = data[3];
           MB.allLow = data[3];
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           //cancel_buy_order
           //set new low
           //set upper and lower band
@@ -271,7 +270,7 @@ let coreLogic = async (data,MB) => {
             `SL Reached cancel TGT Buy Order ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
 
           }
           //cancel_buy_order
@@ -284,7 +283,7 @@ let coreLogic = async (data,MB) => {
             MB.comments.push(
               `New Low(${data[3]}) at ${getTimeForComment(data)}`
             );
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
             MB.status = 4;
             MB.comments.push(
               `SL Reached Normall sell order Placed at ${MB.priceToTrade.toFixed(
@@ -293,12 +292,12 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
             }
             // place_sell_order
           } else {
             MB.status = 5;
-            setTargetFunction('SELL',MB);
+            await setTargetFunction('SELL',MB);
             MB.comments.push(
               `SL Reached TGT sell order Placed at ${MB.priceToTrade.toFixed(
                 2
@@ -310,7 +309,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
 
             }
             //place_sell_order
@@ -342,7 +341,7 @@ let coreLogic = async (data,MB) => {
             isLast: false,
           })
           MB.openOrderId = generateUniqId();
-          //placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade,data[0]);
+          //await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade,data[0]);
           // trades.push({
           //   side: 'SELL',
           //   exec: MB.priceToTrade,
@@ -358,7 +357,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.low = data[3];
             MB.allLow = data[3];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
           return res(true);
         }
@@ -371,7 +370,7 @@ let coreLogic = async (data,MB) => {
             `UB Normal Sell Cancelled at  ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
 
           }
           //cancel_sell_order
@@ -389,14 +388,14 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
             }
             //place_buy_order
           } else {
             // console.log("TGT Buy order", data)
             MB.status = 3;
             MB.priceToTrade = data[2] + buySellDiff;
-            setTargetFunction('BUY',MB);
+            await setTargetFunction('BUY',MB);
             MB.comments.push(
               `UB TGT Buy Order Placed at ${MB.priceToTrade.toFixed(
                 2
@@ -406,7 +405,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
             }
             //place_buy_order
@@ -420,7 +419,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.high = data[2];
             MB.allHigh = data[2];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
           return res(true);
         }
@@ -437,9 +436,9 @@ let coreLogic = async (data,MB) => {
           MB.status = 1;
           MB.high = data[2];
           MB.allHigh = data[2];
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
 
           }
         }
@@ -486,7 +485,7 @@ let coreLogic = async (data,MB) => {
             `SL Reached cancel TGT Sell Order ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
 
           }
           //cancel_sell_order
@@ -499,7 +498,7 @@ let coreLogic = async (data,MB) => {
             MB.comments.push(
               `New High(${data[2]}) at ${getTimeForComment(data)}`
             );
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
             MB.status = 2;
             MB.comments.push(
               `SL Reached Normall Buy order Placed at ${MB.priceToTrade.toFixed(
@@ -508,14 +507,14 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
 
             }
 
             //place_buy_order
           } else {
             MB.status = 3;
-            setTargetFunction('BUY',MB);
+            await setTargetFunction('BUY',MB);
             MB.comments.push(
               `SL Reached TGT BUY order Placed at ${MB.priceToTrade.toFixed(
                 2
@@ -527,7 +526,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
 
             }
 
@@ -556,7 +555,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
 
             }
 
@@ -566,7 +565,7 @@ let coreLogic = async (data,MB) => {
             MB.slOrderPlaced = true;
             MB.slOrderStatus = 5;
             MB.slPriceToTrade = data[3] - buySellDiff;
-            setTargetFunction('SELL',MB);
+            await setTargetFunction('SELL',MB);
             MB.comments.push(
               `LB reached SL SELL TGT Order placed at ${MB.slPriceToTrade.toFixed(
                 2
@@ -579,7 +578,7 @@ let coreLogic = async (data,MB) => {
           }
           MB.openOrderId = generateUniqId()
           if(IS_TEST_MODE != 'YES'){
-            placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+            await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
           }
 
@@ -588,7 +587,7 @@ let coreLogic = async (data,MB) => {
             //set NEW low and reverse UB LB
             MB.low = data[3];
             MB.allLow = data[3];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
         }
     
@@ -598,7 +597,7 @@ let coreLogic = async (data,MB) => {
           MB.high = data[2];
           //reverse UB LB
     
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
         }
     
         break;
@@ -623,7 +622,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
             }
           } else {
@@ -632,7 +631,7 @@ let coreLogic = async (data,MB) => {
             MB.slOrderPlaced = true;
             MB.slOrderStatus = 5;
             MB.slPriceToTrade = data[3] - buySellDiff;
-            setTargetFunction('SELL',MB);
+            await setTargetFunction('SELL',MB);
             MB.comments.push(
               `Stoploss reached SL SELL TGT Order placed at ${MB.slPriceToTrade.toFixed(
                 2
@@ -644,7 +643,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
             }
           }
@@ -654,7 +653,7 @@ let coreLogic = async (data,MB) => {
             //set NEW low and reverse UB LB
             MB.low = data[3];
             MB.allLow = data[3];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
         }
     
@@ -667,7 +666,7 @@ let coreLogic = async (data,MB) => {
             MB.allHigh = data[2];
           }
           //set UB and LB
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
     
           //convert to normal Buy order
           MB.target = 0;
@@ -700,7 +699,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
             }
 
           } else {
@@ -709,7 +708,7 @@ let coreLogic = async (data,MB) => {
             MB.slOrderPlaced = true;
             MB.slOrderStatus = 3;
             MB.slPriceToTrade = data[2] + buySellDiff;
-            setTargetFunction('BUY',MB);
+            await setTargetFunction('BUY',MB);
             MB.comments.push(
               `UB reached SL BUY TGT Order placed at ${MB.slPriceToTrade.toFixed(
                 2
@@ -721,7 +720,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
             }
 
@@ -732,7 +731,7 @@ let coreLogic = async (data,MB) => {
             //set NEW High and reverse UB LB
             MB.high = data[2];
             MB.allHigh = data[2];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
         }
     
@@ -742,7 +741,7 @@ let coreLogic = async (data,MB) => {
           MB.allLow = data[3];
           //reverse UB LB
     
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
         }
     
         break;
@@ -766,7 +765,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
             }
 
@@ -776,7 +775,7 @@ let coreLogic = async (data,MB) => {
             MB.slOrderPlaced = true;
             MB.slOrderStatus = 3;
             MB.slPriceToTrade = data[2] + buySellDiff;
-            setTargetFunction('BUY',MB);
+            await setTargetFunction('BUY',MB);
             MB.comments.push(
               `StopLoss reached SL BUY TGT Order placed at ${
                 MB.slPriceToTrade
@@ -786,7 +785,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
 
             }
 
@@ -797,7 +796,7 @@ let coreLogic = async (data,MB) => {
             //set NEW High and reverse UB LB
             MB.high = data[2];
             MB.allHigh = data[2];
-            setUpperBandAndLowerBand(data,MB);
+            await setUpperBandAndLowerBand(data,MB);
           }
         }
     
@@ -810,7 +809,7 @@ let coreLogic = async (data,MB) => {
             MB.allLow = data[3];
           }
           //set UB and LB
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
     
           //convert to normal sell order
           MB.target = 0;
@@ -841,14 +840,14 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
 
           }
           //set New High
           MB.high = data[2];
           MB.allHigh = data[2];
           //set UB LB
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           return res(true);
         }
     
@@ -884,7 +883,7 @@ let coreLogic = async (data,MB) => {
             MB.allLow = data[3];
           }
           // Update UB LB   (Uniq)
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
         }
     
         break;
@@ -907,7 +906,7 @@ let coreLogic = async (data,MB) => {
           );
           //Set target to new High
           MB.high = MB.target;
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           //Update UB LB
           return res(true);
         }
@@ -944,7 +943,7 @@ let coreLogic = async (data,MB) => {
             MB.allLow = data[3];
           }
           // Update UB LB   (Uniq)
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
         }
     
         break;
@@ -965,14 +964,14 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
 
           }
           //set New High
           MB.high = data[2];
           MB.allHigh = data[2];
           //set UB LB
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           return res(true);
         }
     
@@ -1028,12 +1027,12 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
 
           }
           //Set target to new High
           MB.high = MB.target;
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           //Update UB LB
           return res(true);
         }
@@ -1089,14 +1088,14 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
 
           }
           //set New Low
           MB.low = data[3];
           MB.allLow = data[3];
           //set UB LB
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           return res(true);
         }
     
@@ -1133,7 +1132,7 @@ let coreLogic = async (data,MB) => {
             MB.allHigh = data[2];
           }
           // Update UB LB   (Uniq)
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
         }
     
         break;
@@ -1156,12 +1155,12 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
 
           }
           //Set target to new High
           MB.low = MB.target;
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           //Update UB LB
           return res(true);
         }
@@ -1198,7 +1197,7 @@ let coreLogic = async (data,MB) => {
             MB.allHigh = data[2];
           }
           // Update UB LB   (Uniq)
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
         }
         break;
       }
@@ -1218,14 +1217,14 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
 
           }
           //set New Low
           MB.low = data[3];
           MB.allLow = data[3];
           //set UB LB
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           return res(true);
         }
     
@@ -1276,12 +1275,12 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
 
           }
           //Set target to new low
           MB.low = MB.target;
-          setUpperBandAndLowerBand(data,MB);
+          await setUpperBandAndLowerBand(data,MB);
           //Update UB LB
           return res(true);
         }
@@ -1329,16 +1328,18 @@ let coreLogic = async (data,MB) => {
 }
 
   //Check to place Order Case 1
-let checkToPlaceOrder = (data,MB) => {
-    //Initial order excution
+let checkToPlaceOrder = async(data,MB) => {
+  return new Promise(async(res,rej)=>{
+    try {
+          //Initial order excution
     if (data[2] >= MB.high) {
       MB.high = data[2];
       MB.allHigh = data[2];
-      setUpperBandAndLowerBand(data,MB);
+      await setUpperBandAndLowerBand(data,MB);
     }
     if (data[2] >= MB.UB) {
       if (data[2] < MB.high) {
-        setTargetFunction('BUY',MB);
+        await setTargetFunction('BUY',MB);
         MB.comments.push(
           `Crossed UB Buy Order placed at ${
             data[2] + buySellDiff
@@ -1351,7 +1352,7 @@ let checkToPlaceOrder = (data,MB) => {
         MB.status = 3;
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          await placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
         }
 
       
@@ -1367,7 +1368,7 @@ let checkToPlaceOrder = (data,MB) => {
         );
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          await placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
         }
         
         //place_buy_order
@@ -1375,16 +1376,16 @@ let checkToPlaceOrder = (data,MB) => {
       MB.priceToTrade = customParseFloat(
         data[2] + buySellDiff
       );
-      return;
+      return res(true);
     }
     if (data[3] <= MB.low) {
       MB.low = data[3];
       MB.allLow = data[3];
-      setUpperBandAndLowerBand(data,MB);
+      await setUpperBandAndLowerBand(data,MB);
     }
     if (data[3] <= MB.LB) {
       if (data[3] > MB.low) {
-        setTargetFunction('SELL',MB);
+        await setTargetFunction('SELL',MB);
         MB.status = 5;
         MB.comments.push(
           `Crossed LB Sell Order placed at ${
@@ -1395,7 +1396,7 @@ let checkToPlaceOrder = (data,MB) => {
         );
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+          await placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
         }
         
 
@@ -1409,7 +1410,7 @@ let checkToPlaceOrder = (data,MB) => {
         );
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          await placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
         }
         
         //place_sell_order
@@ -1418,34 +1419,59 @@ let checkToPlaceOrder = (data,MB) => {
         data[3] - buySellDiff
       );
       // console.log(`Crossed LB SELL Order placed at ${data[3] - buySellDiff}`);
-      return;
+      return res(true);
     }
+    res(true)
+    } catch (error) {
+      console.log("Error happened inside checkToPlaceOrder function please check:", error);
+      rej(false)
+    }
+  })
+
   }
 
  let setTargetFunction = (type,MB) => {
-    if (type == 'BUY') {
-      let dif = MB.open - MB.allLow;
-      MB.target = MB.open + dif;
-      MB.stopLoss = MB.allLow;
-    } else if (type == 'SELL') {
-      let dif = MB.allHigh - MB.open;
-      MB.target = MB.open - dif;
-      MB.stopLoss = MB.allHigh;
+  return new Promise((res,rej) => {
+    try {
+      if (type == 'BUY') {
+        let dif = MB.open - MB.allLow;
+        MB.target = MB.open + dif;
+        MB.stopLoss = MB.allLow;
+      } else if (type == 'SELL') {
+        let dif = MB.allHigh - MB.open;
+        MB.target = MB.open - dif;
+        MB.stopLoss = MB.allHigh;
+      } 
+      res(true)
+    } catch (error) {
+      console.log("Error Happend inside setTargetFunction: ",error)
+      rej(false)
     }
+  })
+
   }
   //Find upper and Lower Band
-  let setUpperBandAndLowerBand = (data,MB)  => {
-    let diff = data[2] - data[3];
-    let UB = customParseFloat(data[2] + diff);
-    let LB = customParseFloat(data[3] - diff);
-    if (MB.isFirstTrade) {
-      if (!MB.UB || MB.UB >= UB) MB.UB = UB;
-      //18264 < 18275
-      if (!MB.LB || LB >= MB.LB) MB.LB = LB;
-    } else {
-      MB.UB = UB;
-      MB.LB = LB;
-    }
+  let setUpperBandAndLowerBand = async(data,MB)  => {
+    return new Promise((res,rej)=>{
+      try {
+        let diff = data[2] - data[3];
+        let UB = customParseFloat(data[2] + diff);
+        let LB = customParseFloat(data[3] - diff);
+        if (MB.isFirstTrade) {
+          if (!MB.UB || MB.UB >= UB) MB.UB = UB;
+          //18264 < 18275
+          if (!MB.LB || LB >= MB.LB) MB.LB = LB;
+        } else {
+          MB.UB = UB;
+          MB.LB = LB;
+        }
+        res(true)
+      } catch (error) {
+        console.log("Erro happend in set upper band and lower band function: ",error );
+        rej(false);
+      }
+    })
+
   }
 
 
@@ -1508,7 +1534,7 @@ let closeTrade = async(data) => {
         MB.executedTradeCount += 1;
         console.log('Time up cancel all pending order and execute exit order')
         if(IS_TEST_MODE != 'YES'){
-          placeOrderToBroker('SELL',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
+          await placeOrderToBroker('SELL',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
 
         }
 
@@ -1527,7 +1553,7 @@ let closeTrade = async(data) => {
         console.log('Time up cancel all pending order and execute exit order')
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          placeOrderToBroker('BUY',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
+          await placeOrderToBroker('BUY',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
 
         }
       } else {

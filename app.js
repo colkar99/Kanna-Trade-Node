@@ -91,7 +91,7 @@ var event = schedule.scheduleJob("2 */5 * * * *", async function() {
         interval = setInterval(async() => {
           await checkOrderExecutedOrNot()
         //Check the exection order and update the data accordingly
-        },10000)
+        },7000)
       }
 
     } 
@@ -139,7 +139,14 @@ var event1 = schedule.scheduleJob("0 18 * * *",async function() {
 //  // await placeOrderToBroker('BUY',9,551403430378,'64c7b3355abfba60fba62186',true,moment().format('YYYY-MM-DD'),false)
 // // placeOrder("","","","","","","");
 //  // await cancelOpenOrder('BUY',230801002391393,'64c7b3355abfba60fba62186')
-//  await checkOrderExecutedOrNot();
+//  //await checkOrderExecutedOrNot();
+
+//  let user = await User.findOne({email: process.env.ADMIN_MAIL})
+//       let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
+//       candles= candles.slice(1,5);
+//       for(let i = 0; i < candles.length; i++){
+//         await Core.mainFunction(candles[i]);
+//       }
 
 // }
 // test()
