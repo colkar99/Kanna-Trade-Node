@@ -59,7 +59,7 @@ exports.checkOrderExecutedOrNot = async() => {
 exports.cancelOpenOrder = async(order_id,token) =>{
     return new Promise(async(res,rej) => {
         try {
-            if(!order_id || !token) return new Error('Order Id Or Token is required to cancel')
+            if(!order_id || !token) throw 'Order Id Or Token is required to cancel';
             let url =`https://kite.zerodha.com/oms/orders/regular/${order_id}?order_id=${order_id}&parent_order_id=&variety=regular`;
             const config = {
                 headers: {
@@ -73,7 +73,6 @@ exports.cancelOpenOrder = async(order_id,token) =>{
         } catch (error) {
             console.log(error);
             rej(error)
-            
         }
     })
 }
@@ -81,7 +80,7 @@ exports.cancelOpenOrder = async(order_id,token) =>{
 exports.placeOrder = async (side, tradingsymbol,quantity,trigger_price,user_id,token,order_type = "SL-M") => {
   return new Promise(async (resolve, reject) => {
     try {
-      if(!side ||  !tradingsymbol || !quantity || !trigger_price || !user_id || !token || !order_type) return reject("Bad data error from place order functon")  
+      if(!side ||  !tradingsymbol || !quantity || !trigger_price || !user_id || !token || !order_type) throw "Bad data error from place order functon";
      
       const url = `https://kite.zerodha.com/oms/orders/regular`;
       const config = {

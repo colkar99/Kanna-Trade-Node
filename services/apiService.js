@@ -13,7 +13,7 @@ const {placeOrder,cancelOpenOrder} = require('./kiteService');
 exports.getCandles = async(date,token,instrumentId,user_id) => {
     return new Promise(async(resolve,reject) => {
         try {
-            if (!token) return reject({status: 400,message:"Token is missing"});
+            if (!token) throw {status: 400,message:"Token is missing"};
             const url = `https://kite.zerodha.com/oms/instruments/historical/${instrumentId}/5minute?user_id=${user_id}&oi=1&from=${date}&to=${date}`;
             const config = {
               headers: {
