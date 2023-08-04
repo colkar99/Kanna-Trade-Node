@@ -29,7 +29,7 @@ exports.mainFunction = async(data) => {
         // let startTime = new Date(data[0]).setHours(9,30,0,0);
         // let endTime = new Date(data[0]).setHours(15,15,0,0);
         let startTime = moment(data[0]).set({ hour:9, minute:30 });
-        let endTime = moment(data[0]).set({ hour:15, minute:10 });
+        let endTime = moment(data[0]).set({ hour:15, minute:15 });
 
         //console.log(data[0])
         // console.log('Start Date:', day.getTime() > startTime);
@@ -37,7 +37,7 @@ exports.mainFunction = async(data) => {
         // return
         if(day.format() == endTime.format()){
           // Close Trade
-
+          
           await closeTrade(data)
           return res(true)
 
@@ -1511,6 +1511,9 @@ let closeTrade = async(data) => {
       let isoDateString = day.toISOString().split('T')[0];       
     
       let MB = await DailyMarketWatch.findOne({date: isoDateString});
+      if(MB.tradeEnd){
+        return res(true);
+      }
       //let data = await getCandles(isoDateString,token);
       let closePrice = data[4];
       //MB.openOrderId = generateUniqId()
@@ -1560,6 +1563,14 @@ let closeTrade = async(data) => {
         MB.comments.push(
           `Cancell all the pending orders and close the trade`
         );
+        if(MB.openOrderId != ''){
+          //one buy order is in open state close it before placing exit order
+          if(IS_TEST_MODE != 'YES'){
+            await cancelOpenOrder('ANY Side',MB.openOrderId,MB._id);
+            MB.openOrderId  = '';
+          }
+        }
+
       }
       MB.status = 18;
       MB.target = 0;
@@ -1574,7 +1585,7 @@ let closeTrade = async(data) => {
       await MB.save()
       return res(true);
     } catch (error) {
-      console.log(error)
+      console.log("From inside Close Trade Function",error)
       rej(true)
     } 
   })
@@ -1648,6 +1659,10 @@ let getTimeForComment = (data) => {
 let generateUniqId = () => {
   return parseInt((Math.random() * Date.now()).toFixed());
 } 
+
+//[6, 7, 10, 11, 12, 13];
+//[8, 9, 14, 15, 16, 17];
+
 //High =2, low  = 3
 
 // enum Order {
