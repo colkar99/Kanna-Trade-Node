@@ -3,6 +3,7 @@ const axios = require("axios");
 const User = require("../model/user");
 const DailyMarketWatch = require("../model/DailyMarketWatch");
 const Trade = require("../model/Trade");
+const {sendMail} = require('./mailerService');
 
 
 
@@ -51,6 +52,7 @@ exports.checkOrderExecutedOrNot = async() => {
             //console.log('Inside Order Executed or not logic', data);  
         } catch (error) {
             console.log("From Order Exec Function",error);
+            sendMail('checkOrderExecutedOrNot/kiteService',{},error)
             rej(error);
         }
     })
