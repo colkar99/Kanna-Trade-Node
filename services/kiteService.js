@@ -27,10 +27,10 @@ exports.checkOrderExecutedOrNot = async() => {
                     if(data[i].status == 'COMPLETE'){
                         let trade = await Trade.findOne({order_id: data[i].order_id});
                         if(!trade){
-                            console.log("Outside Trades",trade);
+                            // console.log("Outside Trades",trade);
                             continue;
                         }
-                        console.log('Inside Trades', trade)
+                        // console.log('Inside Trades', trade)
                         trade.status = "COMPLETE";
                         trade.order_exe_price = data[i].average_price;
                         let parentId = trade.market_data_id;
@@ -78,10 +78,10 @@ exports.cancelOpenOrder = async(order_id,token) =>{
     })
 }
 
-exports.placeOrder = async (side, tradingsymbol,quantity,trigger_price,user_id,token) => {
+exports.placeOrder = async (side, tradingsymbol,quantity,trigger_price,user_id,token,order_type = "SL-M") => {
   return new Promise(async (resolve, reject) => {
     try {
-      if(!side ||  !tradingsymbol || !quantity || !trigger_price || !user_id || !token) return reject("Bad data error from place order functon")  
+      if(!side ||  !tradingsymbol || !quantity || !trigger_price || !user_id || !token || !order_type) return reject("Bad data error from place order functon")  
      
       const url = `https://kite.zerodha.com/oms/orders/regular`;
       const config = {
@@ -94,7 +94,7 @@ exports.placeOrder = async (side, tradingsymbol,quantity,trigger_price,user_id,t
         variety: "regular",
         exchange: "NSE",
         transaction_type: side,
-        order_type: "SL-M",
+        order_type: order_type,
         quantity: quantity,
         price: 0,
         product: "MIS",

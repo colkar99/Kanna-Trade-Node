@@ -53,7 +53,7 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
       }
       console.log(Trade);
 
-    let response = await placeOrder(Trade.transaction_type,Trade.tradingsymbol,Trade.quantity,Trade.trigger_price,user.brokerUserId,user.token)
+    let response = await placeOrder(Trade.transaction_type,Trade.tradingsymbol,Trade.quantity,Trade.trigger_price,user.brokerUserId,user.token,Trade.order_type)
     // Response structure { status: 'success', data: { order_id: '230801001341992' } }
     if(response.status == 'success'){
         Trade.status = "ORDER_PLACED";
