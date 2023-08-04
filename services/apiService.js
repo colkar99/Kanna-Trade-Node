@@ -3,6 +3,7 @@ const moment = require('moment')
 const User = require('../model/user');
 const Trade = require('../model/Trade');
 const DailyMarketWatch = require('../model/DailyMarketWatch');
+var {sendMail} = require('./mailerService')
 
 const {placeOrder,cancelOpenOrder} = require('./kiteService');
 
@@ -20,9 +21,11 @@ exports.getCandles = async(date,token,instrumentId,user_id) => {
               },
             };
             const response = await axios.get(url, config);
+
             resolve(response.data.data.candles);
         } catch (error) {
-            console.log(error)
+            console.log("Error Happend inside getCandles/apiservice:",error)
+            sendMail('getCandles/api service',{date,token,instrumentId,user_id},error)
             reject(error)
         }
       
@@ -80,7 +83,8 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
     res(true)
 
     } catch (error) {
-      console.log(error);
+      console.log("Error Happend inside placeOrderToBroker/apiservice: ",error);
+      sendMail('placeOrderToBroker/apiservice', {side,price,referenceId,parentId,isFirstTrade,date,isLastTrade},error)
       rej(error)
     }
   })
@@ -120,7 +124,8 @@ exports.cancelOpenOrder = async(side,referenceId,parentId) => {
             }
             res(true)
         } catch (error) {
-            console.log(error);
+            console.log("Error happened inside cancelOpenOrder/apiservice:",error);
+            sendMail('cancelOpenOrder/apiservice', {side,referenceId,parentId},error)
             rej(error)
         }
     })
