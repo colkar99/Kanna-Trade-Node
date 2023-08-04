@@ -50,7 +50,7 @@ exports.checkOrderExecutedOrNot = async() => {
             res(true)
             //console.log('Inside Order Executed or not logic', data);  
         } catch (error) {
-            console.log(error);
+            console.log("From Order Exec Function",error);
             rej(error);
         }
     })

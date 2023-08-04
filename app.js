@@ -70,14 +70,12 @@ const DailyMarketWatch = require('./model/DailyMarketWatch');
 
 
 //Run on every 5 mins
-let interval;
-var event = schedule.scheduleJob("2 */5 * * * *", async function() {
+var event = schedule.scheduleJob("3 */5 * * * *", async function() {
   try {
     console.log("Requesting Candle for Every 5 mins:" ,moment().format())
     let startTime = moment().set({ hour:9, minute:20 });
     let endTime = moment().set({ hour:15, minute:25 });
     let dateNow = moment();
-    clearInterval(interval);
     if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
       console.log('Time started:',moment());
       let user = await User.findOne({email: process.env.ADMIN_MAIL})
@@ -87,12 +85,12 @@ var event = schedule.scheduleJob("2 */5 * * * *", async function() {
         await Core.mainFunction(candles[i]);
       }
       //Run Every 10 seconds to check is order executed or not
-      if(IS_TEST_MODE != 'YES'){
-        interval = setInterval(async() => {
-          await checkOrderExecutedOrNot()
-        //Check the exection order and update the data accordingly
-        },7000)
-      }
+      // if(IS_TEST_MODE != 'YES'){
+      //   interval = setInterval(async() => {
+      //     await checkOrderExecutedOrNot()
+      //   //Check the exection order and update the data accordingly
+      //   },7000)
+      // }
 
     } 
   } catch (error) {
@@ -101,6 +99,26 @@ var event = schedule.scheduleJob("2 */5 * * * *", async function() {
 
 
 });
+
+var checkOrderStatus = schedule.scheduleJob("0 */1 * * * *", async function() {
+  try {
+      if(IS_TEST_MODE != 'YES'){
+        let startTime = moment().set({ hour:9, minute:20 });
+        let endTime = moment().set({ hour:15, minute:25 });
+        let dateNow = moment();
+
+        if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
+          await checkOrderExecutedOrNot()
+          //Check the exection order and update the data accordingly
+        }
+       
+      }
+  } catch (error) {
+    console.log('ERror happend in check order status call function',error)
+  }
+});
+//
+
 
 // use this to remove token etc
 var event1 = schedule.scheduleJob("0 18 * * *",async function() {
