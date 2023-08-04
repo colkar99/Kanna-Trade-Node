@@ -29,7 +29,7 @@ exports.mainFunction = async(data) => {
         // let startTime = new Date(data[0]).setHours(9,30,0,0);
         // let endTime = new Date(data[0]).setHours(15,15,0,0);
         let startTime = moment(data[0]).set({ hour:9, minute:30 });
-        let endTime = moment(data[0]).set({ hour:15, minute:15 });
+        let endTime = moment(data[0]).set({ hour:15, minute:10 });
 
         //console.log(data[0])
         // console.log('Start Date:', day.getTime() > startTime);
