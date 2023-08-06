@@ -25,8 +25,8 @@ exports.getCandles = async(date,token,instrumentId,user_id) => {
             resolve(response.data.data.candles);
         } catch (error) {
             console.log("Error Happend inside getCandles/apiservice:",error)
-            sendMail('getCandles/api service',{date,token,instrumentId,user_id},error)
             reject(error)
+            sendMail('getCandles/api service',{date,token,instrumentId,user_id},error)
         }
       
     })
@@ -84,8 +84,8 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
 
     } catch (error) {
       console.log("Error Happend inside placeOrderToBroker/apiservice: ",error);
-      sendMail('placeOrderToBroker/apiservice', {side,price,referenceId,parentId,isFirstTrade,date,isLastTrade},error)
       rej(error)
+      sendMail('placeOrderToBroker/apiservice', {side,price,referenceId,parentId,isFirstTrade,date,isLastTrade},error)
     }
   })
 
@@ -125,8 +125,8 @@ exports.cancelOpenOrder = async(side,referenceId,parentId) => {
             res(true)
         } catch (error) {
             console.log("Error happened inside cancelOpenOrder/apiservice:",error);
-            sendMail('cancelOpenOrder/apiservice', {side,referenceId,parentId},error)
             rej(error)
+            sendMail('cancelOpenOrder/apiservice', {side,referenceId,parentId},error)
         }
     })
 }

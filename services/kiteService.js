@@ -52,8 +52,8 @@ exports.checkOrderExecutedOrNot = async() => {
             //console.log('Inside Order Executed or not logic', data);  
         } catch (error) {
             console.log("From Order Exec Function",error);
-            sendMail('checkOrderExecutedOrNot/kiteService',{},error)
             rej(error);
+            sendMail('checkOrderExecutedOrNot/kiteService',{},error);
         }
     })
 }
