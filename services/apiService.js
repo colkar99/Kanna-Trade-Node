@@ -73,10 +73,11 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
           );
 
     }else if(response.status != 'success') {
-        setTimeout(() =>{
-            placeOrderToBroker(side,price,referenceId,parentId,isFirstTrade,date,isLastTrade = false)
-        } , 5000)
-        rej(false)
+        throw {message: 'Error Happend while placing Oreder',error: response}
+        // setTimeout(() =>{
+        //     placeOrderToBroker(side,price,referenceId,parentId,isFirstTrade,date,isLastTrade = false)
+        // } , 5000)
+        // rej(false)
     }
 
     console.warn(`Place ${side} Order at: ${price} with Quantity: ${Trade.quantity}`)
@@ -116,11 +117,13 @@ exports.cancelOpenOrder = async(side,referenceId,parentId) => {
               );
                
             }else{
-                setTimeout(() => {
-                    cancelOpenOrder(side,referenceId,parentId)
-                },5000)
-                rej(false)
-                return
+              throw {message: 'Error Happend while cancelling the order',error: response}
+
+                // setTimeout(() => {
+                //     cancelOpenOrder(side,referenceId,parentId)
+                // },5000)
+                // rej(false)
+                // return
             }
             res(true)
         } catch (error) {
