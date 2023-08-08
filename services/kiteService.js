@@ -82,7 +82,9 @@ exports.cancelOpenOrder = async(order_id,token) =>{
 exports.placeOrder = async (side, tradingsymbol,quantity,trigger_price,user_id,token,order_type = "SL-M") => {
   return new Promise(async (resolve, reject) => {
     try {
-      if(!side ||  !tradingsymbol || !quantity || !trigger_price || !user_id || !token || !order_type) throw "Bad data error from place order functon";
+      if(!side ||  !tradingsymbol || !quantity  || !user_id || !token || !order_type) throw "Bad data error from place order functon";
+
+      if(order_type == 'SL-M' && !trigger_price) throw "Bad Data: Trigger price coming as 0 in SL_M Order please check" 
      
       const url = `https://kite.zerodha.com/oms/orders/regular`;
       const config = {

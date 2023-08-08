@@ -150,11 +150,15 @@ let coreLogic = async (data,MB) => {
             `LB Normal Buy Cancelled at  ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //cancel_buy_order
-          //Place normal Buy/ Tgt buy order
+          //Place normal Sell/ Tgt Sell order
           if (data[3] <= MB.low) {
             MB.status = 4;
             MB.priceToTrade = data[3] - buySellDiff;
@@ -167,7 +171,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
             }
             //place_sell_order
           } else {
@@ -183,7 +189,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-            await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,date[0])
+            let response  = await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,date[0])
+            MB.openOrderId = response;
+
 
             }
 
@@ -215,7 +223,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //cancel_buy_order
@@ -270,7 +282,11 @@ let coreLogic = async (data,MB) => {
             `SL Reached cancel TGT Buy Order ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //cancel_buy_order
@@ -292,7 +308,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              let response  = await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
             }
             // place_sell_order
           } else {
@@ -309,7 +327,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              let response  = await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
             //place_sell_order
@@ -341,7 +361,7 @@ let coreLogic = async (data,MB) => {
             isLast: false,
           })
           MB.openOrderId = generateUniqId();
-          //await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade,data[0]);
+          //let response  = await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(),MB.openOrderId,MB._id,MB.isFirstTrade,data[0]);
           // trades.push({
           //   side: 'SELL',
           //   exec: MB.priceToTrade,
@@ -370,7 +390,11 @@ let coreLogic = async (data,MB) => {
             `UB Normal Sell Cancelled at  ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //cancel_sell_order
@@ -388,7 +412,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
             }
             //place_buy_order
           } else {
@@ -405,7 +431,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
             //place_buy_order
@@ -438,7 +466,11 @@ let coreLogic = async (data,MB) => {
           MB.allHigh = data[2];
           await setUpperBandAndLowerBand(data,MB);
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
         }
@@ -485,7 +517,11 @@ let coreLogic = async (data,MB) => {
             `SL Reached cancel TGT Sell Order ${getTimeForComment(data)}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //cancel_sell_order
@@ -507,7 +543,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              let response  = await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
 
@@ -526,7 +564,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              let response  = await placeOrderToBroker('BUY',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
 
@@ -555,7 +595,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+              let response  = await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
 
@@ -578,7 +620,9 @@ let coreLogic = async (data,MB) => {
           }
           MB.openOrderId = generateUniqId()
           if(IS_TEST_MODE != 'YES'){
-            await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+            let response  = await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+            MB.openOrderId = response;
+
 
           }
 
@@ -622,7 +666,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
           } else {
@@ -643,7 +689,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('SELL',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
           }
@@ -699,7 +747,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
             }
 
           } else {
@@ -720,7 +770,9 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId();
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
+
 
             }
 
@@ -765,7 +817,8 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
 
             }
 
@@ -785,7 +838,8 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-              await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              let response  = await placeOrderToBroker('BUY',MB.slPriceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+              MB.openOrderId = response;
 
             }
 
@@ -840,7 +894,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //set New High
@@ -964,7 +1022,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //set New High
@@ -1027,7 +1089,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('SELL',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //Set target to new High
@@ -1088,7 +1154,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //set New Low
@@ -1155,7 +1225,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //Set target to new High
@@ -1217,7 +1291,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //set New Low
@@ -1275,7 +1353,11 @@ let coreLogic = async (data,MB) => {
             )}`
           );
           if(IS_TEST_MODE != "YES"){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id)
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
           //Set target to new low
@@ -1352,7 +1434,9 @@ let checkToPlaceOrder = async(data,MB) => {
         MB.status = 3;
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          await placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          let response  = await placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          MB.openOrderId = response;
+
         }
 
       
@@ -1368,7 +1452,9 @@ let checkToPlaceOrder = async(data,MB) => {
         );
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          await placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          let response  = await placeOrderToBroker('BUY',customParseFloat((data[2] + buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+          MB.openOrderId = response;
+
         }
         
         //place_buy_order
@@ -1396,7 +1482,9 @@ let checkToPlaceOrder = async(data,MB) => {
         );
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          await placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+          let response  = await placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0]);
+          MB.openOrderId = response;
+
         }
         
 
@@ -1410,7 +1498,9 @@ let checkToPlaceOrder = async(data,MB) => {
         );
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          await placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          let response  = await placeOrderToBroker('SELL',customParseFloat((data[3] - buySellDiff),2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
+          MB.openOrderId = response;
+
         }
         
         //place_sell_order
@@ -1524,7 +1614,11 @@ let closeTrade = async(data) => {
         if(MB.openOrderId != ''){
           //one buy order is in open state close it before placing exit order
           if(IS_TEST_MODE != 'YES'){
-            await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            let response  = await cancelOpenOrder('SELL',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
         }
@@ -1537,8 +1631,8 @@ let closeTrade = async(data) => {
         MB.executedTradeCount += 1;
         console.log('Time up cancel all pending order and execute exit order')
         if(IS_TEST_MODE != 'YES'){
-          await placeOrderToBroker('SELL',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
-
+          let response  = await placeOrderToBroker('SELL',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
+          MB.openOrderId = response;
         }
 
       } else if (sellSide.includes(MB.status)) {
@@ -1546,7 +1640,11 @@ let closeTrade = async(data) => {
         if(MB.openOrderId != ''){
           //one buy order is in open state close it before placing exit order
           if(IS_TEST_MODE != 'YES'){
-            await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            let response  = await cancelOpenOrder('BUY',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }
+            
 
           }
         }
@@ -1556,7 +1654,9 @@ let closeTrade = async(data) => {
         console.log('Time up cancel all pending order and execute exit order')
         MB.openOrderId = generateUniqId()
         if(IS_TEST_MODE != 'YES'){
-          await placeOrderToBroker('BUY',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
+          let response  = await placeOrderToBroker('BUY',closePrice.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0],true);
+          MB.openOrderId = response;
+
 
         }
       } else {
@@ -1566,8 +1666,10 @@ let closeTrade = async(data) => {
         if(MB.openOrderId != ''){
           //one buy order is in open state close it before placing exit order
           if(IS_TEST_MODE != 'YES'){
-            await cancelOpenOrder('ANY Side',MB.openOrderId,MB._id);
-            MB.openOrderId  = '';
+            let response  = await cancelOpenOrder('ANY Side',MB.openOrderId,MB._id);
+            if(response == 'success'){
+              MB.openOrderId = "";
+            }            
           }
         }
 

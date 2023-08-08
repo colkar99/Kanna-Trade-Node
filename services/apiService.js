@@ -2,7 +2,7 @@ const axios = require("axios");
 const moment = require('moment')
 const User = require('../model/user');
 const Trade = require('../model/Trade');
-const DailyMarketWatch = require('../model/DailyMarketWatch');
+//const DailyMarketWatch = require('../model/DailyMarketWatch');
 var {sendMail} = require('./mailerService')
 
 const {placeOrder,cancelOpenOrder} = require('./kiteService');
@@ -62,15 +62,15 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
         Trade.status = "ORDER_PLACED";
         Trade.order_id = response.data.order_id;
         await Trade.save();
-        await DailyMarketWatch.findByIdAndUpdate(
-            { _id: parentId },
-            {
-                openOrderId: response.data.order_id,
-            },
-            {
-              new: true,
-            }
-          );
+        // await DailyMarketWatch.findByIdAndUpdate(
+        //     { _id: parentId },
+        //     {
+        //         openOrderId: response.data.order_id,
+        //     },
+        //     {
+        //       new: true,
+        //     }
+        //   );
 
     }else if(response.status != 'success') {
         throw {message: 'Error Happend while placing Oreder',error: response}
@@ -80,8 +80,8 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
         // rej(false)
     }
 
-    console.warn(`Place ${side} Order at: ${price} with Quantity: ${Trade.quantity}`)
-    res(true)
+    console.warn(`Place ${side} Order at: ${price} with Quantity: ${Trade.quantity} with Trade Order_ID:${Trade.order_id}`)
+    res(response.data.order_id);
 
     } catch (error) {
       console.log("Error Happend inside placeOrderToBroker/apiservice: ",error);
@@ -106,15 +106,15 @@ exports.cancelOpenOrder = async(side,referenceId,parentId) => {
             if(order.status == 'success'){
             trade.status = 'CANCELLED',
              await trade.save();
-             await DailyMarketWatch.findByIdAndUpdate(
-                { _id: parentId },
-                {
-                    openOrderId: '',
-                },
-                {
-                  new: true,
-                }
-              );
+            //  await DailyMarketWatch.findByIdAndUpdate(
+            //     { _id: parentId },
+            //     {
+            //         openOrderId: '',
+            //     },
+            //     {
+            //       new: true,
+            //     }
+            //   );
                
             }else{
               throw {message: 'Error Happend while cancelling the order',error: response}
@@ -125,7 +125,7 @@ exports.cancelOpenOrder = async(side,referenceId,parentId) => {
                 // rej(false)
                 // return
             }
-            res(true)
+            res(order.status);
         } catch (error) {
             console.log("Error happened inside cancelOpenOrder/apiservice:",error);
             rej(error)

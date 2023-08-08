@@ -70,7 +70,7 @@ const DailyMarketWatch = require('./model/DailyMarketWatch');
 
 
 //Run on every 5 mins
-var event = schedule.scheduleJob("3 */5 * * * *", async function() {
+var event = schedule.scheduleJob("0 */5 * * * *", async function() {
   try {
     console.log("Requesting Candle for Every 5 mins:" ,moment().format())
     let startTime = moment().set({ hour:9, minute:20 });
@@ -80,7 +80,7 @@ var event = schedule.scheduleJob("3 */5 * * * *", async function() {
       console.log('Time started:',moment());
       let user = await User.findOne({email: process.env.ADMIN_MAIL})
       let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
-      
+      console.log("Last Candle",candles[candles.length -1]);
       for(let i = 0; i < candles.length; i++){
         await Core.mainFunction(candles[i]);
       }
@@ -100,7 +100,7 @@ var event = schedule.scheduleJob("3 */5 * * * *", async function() {
 
 });
 
-var checkOrderStatus = schedule.scheduleJob("0 */1 * * * *", async function() {
+var checkOrderStatus = schedule.scheduleJob("4 */1 * * * *", async function() {
   try {
       if(IS_TEST_MODE != 'YES'){
         let startTime = moment().set({ hour:9, minute:20 });
