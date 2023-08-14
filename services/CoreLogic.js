@@ -189,7 +189,7 @@ let coreLogic = async (data,MB) => {
             );
             MB.openOrderId = generateUniqId()
             if(IS_TEST_MODE != 'YES'){
-            let response  = await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,date[0])
+            let response  = await placeOrderToBroker('SELL',MB.priceToTrade.toFixed(2),MB.openOrderId,MB._id,MB.executedTradeCount,data[0])
             MB.openOrderId = response;
 
 

@@ -80,6 +80,13 @@ var event = schedule.scheduleJob("0 */5 * * * *", async function() {
       console.log('Time started:',moment());
       let user = await User.findOne({email: process.env.ADMIN_MAIL})
       let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
+
+      if(dateNow.format() == moment(candles[candles.length -1][0]).format()){
+        candles.pop()
+      }
+      console.log("Current Candle and time are same:",dateNow.format() == moment(candles[candles.length -1][0]).format())
+
+
       console.log("Last Candle",candles[candles.length -1]);
       for(let i = 0; i < candles.length; i++){
         await Core.mainFunction(candles[i]);
@@ -106,7 +113,6 @@ var checkOrderStatus = schedule.scheduleJob("4 */1 * * * *", async function() {
         let startTime = moment().set({ hour:9, minute:20 });
         let endTime = moment().set({ hour:15, minute:25 });
         let dateNow = moment();
-
         if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
           await checkOrderExecutedOrNot()
           //Check the exection order and update the data accordingly

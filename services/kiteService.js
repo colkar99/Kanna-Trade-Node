@@ -26,7 +26,7 @@ exports.checkOrderExecutedOrNot = async() => {
             if(data.length != 0){
                 for(let i = 0 ; i < data.length; i++){
                     if(data[i].status == 'COMPLETE'){
-                        let trade = await Trade.findOne({order_id: data[i].order_id});
+                        let trade = await Trade.findOne({order_id: data[i].order_id,isMarkedAsCompleted: false});
                         if(!trade){
                             // console.log("Outside Trades",trade);
                             continue;
@@ -34,6 +34,7 @@ exports.checkOrderExecutedOrNot = async() => {
                         // console.log('Inside Trades', trade)
                         trade.status = "COMPLETE";
                         trade.order_exe_price = data[i].average_price;
+                        Trade.isMarkedAsCompleted = true;
                         let parentId = trade.market_data_id;
                         await trade.save()
                         await DailyMarketWatch.findByIdAndUpdate(

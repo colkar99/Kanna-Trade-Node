@@ -50,6 +50,7 @@ exports.placeOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade,
       Trade.market_data_id = parentId;
       Trade.tradingsymbol = user.tradingSymbol;
       Trade.openOrderRefId = referenceId;
+      Trade.isMarkedAsCompleted = false;
       if(isLastTrade){
         Trade.trigger_price = 0;
         Trade.order_type = "MARKET";

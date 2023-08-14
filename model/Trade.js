@@ -21,7 +21,8 @@ const TradeSchema = mongoose.Schema(
     market_data_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'DailyMarketWatch'
-    }
+    },
+    isMarkedAsCompleted: {type: Boolean,default: false}
     //
   },
   { timestamps: true }
