@@ -34,7 +34,7 @@ exports.checkOrderExecutedOrNot = async() => {
                         // console.log('Inside Trades', trade)
                         trade.status = "COMPLETE";
                         trade.order_exe_price = data[i].average_price;
-                        Trade.isMarkedAsCompleted = true;
+                        trade.isMarkedAsCompleted = true;
                         let parentId = trade.market_data_id;
                         await trade.save()
                         await DailyMarketWatch.findByIdAndUpdate(

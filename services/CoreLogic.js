@@ -9,7 +9,7 @@ const DailyMarketWatch = require('../model/DailyMarketWatch');
 //const isOwnData = false;
 
 //////////////////////////////////
-const buySellDiff = 2;
+const buySellDiff = 1;
 const buySide  = [6, 7, 10, 11, 12, 13];
 const sellSide = [8, 9, 14, 15, 16, 17];
 const IS_TEST_MODE = process.env.IS_TEST_MODE;
