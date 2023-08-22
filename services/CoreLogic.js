@@ -154,8 +154,6 @@ let coreLogic = async (data,MB) => {
             if(response == 'success'){
               MB.openOrderId = "";
             }
-            
-
           }
           //cancel_buy_order
           //Place normal Sell/ Tgt Sell order
