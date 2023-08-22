@@ -177,7 +177,7 @@ let coreLogic = async (data,MB) => {
           } else {
             MB.status = 5;
             MB.priceToTrade = data[3] - buySellDiff;
-            await setTargetFunction('BUY',MB);
+            await setTargetFunction('SELL',MB);
             MB.comments.push(
               `LB TGT SELL Order Placed at${MB.priceToTrade.toFixed(
                 2
