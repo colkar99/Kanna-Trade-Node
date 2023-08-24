@@ -9,6 +9,7 @@ var moment = require('moment'); // require
 const IS_TEST_MODE = process.env.IS_TEST_MODE;
 
 
+
 var {placeOrderToBroker,cancelOpenOrder,getCandles} = require('./services/apiService');
 var {kiteHandShake,getHistoricalData,placeOrder,checkOrderExecutedOrNot,} = require('./services/kiteService');
 
@@ -22,6 +23,8 @@ var {kiteHandShake,getHistoricalData,placeOrder,checkOrderExecutedOrNot,} = requ
 var userRouter = require('./router/user');
 var testRouter = require('./router/test');
 var kiteRouter = require('./router/kite');
+var tickerRouter = require('./router/ticker');
+
 
 var Core = require('./services/CoreLogic');
 var Trade = require('./model/Trade');
@@ -52,6 +55,8 @@ mongoose.connect(mongoUrl, {
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/test", testRouter);
 app.use("/api/v1/kite", kiteRouter);
+app.use("/api/v1/ticker", tickerRouter);
+
 
 
 
@@ -178,15 +183,6 @@ var event1 = schedule.scheduleJob("0 18 * * *",async function() {
 
 // }
 // test()
-
-
-
-
-
-
-
-
-
 
 
 
