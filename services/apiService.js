@@ -135,6 +135,62 @@ exports.cancelOpenOrder = async(side,referenceId,parentId) => {
     })
 }
 
+//Place Market Order
+exports.placeMarketOrderToBroker = async(side,price,referenceId,parentId,isFirstTrade) => {
+  return new Promise(async(res,rej) => {
+    try {
+      let user = await User.findOne({email: 'colkar99@gmail.com'});
+      let Trade = createNewTrade();
+      if(isFirstTrade == 0) Trade.quantity = user.tradingQuantity;
+      else Trade.quantity = user.tradingQuantity * 2 ;
+
+      Trade.transaction_type = side;
+      Trade.status = 'ORDER_PLACED';
+      Trade.order_date = moment().format('YYYY-MM-DD');
+      Trade.market_data_id = parentId;
+      Trade.tradingsymbol = user.tradingSymbol;
+      Trade.openOrderRefId = referenceId;
+      Trade.isMarkedAsCompleted = false;
+      Trade.trigger_price = 0;
+      Trade.order_type = "MARKET";
+      console.log(Trade);
+
+    let response = await placeOrder(Trade.transaction_type,Trade.tradingsymbol,Trade.quantity,Trade.trigger_price,user.brokerUserId,user.token,Trade.order_type)
+    // Response structure { status: 'success', data: { order_id: '230801001341992' } }
+    if(response.status == 'success'){
+        Trade.status = "ORDER_PLACED";
+        Trade.order_id = response.data.order_id;
+        await Trade.save();
+        // await DailyMarketWatch.findByIdAndUpdate(
+        //     { _id: parentId },
+        //     {
+        //         openOrderId: response.data.order_id,
+        //     },
+        //     {
+        //       new: true,
+        //     }
+        //   );
+
+    }else if(response.status != 'success') {
+        throw {message: 'Error Happend while placing Oreder',error: response}
+        // setTimeout(() =>{
+        //     placeOrderToBroker(side,price,referenceId,parentId,isFirstTrade,date,isLastTrade = false)
+        // } , 5000)
+        // rej(false)
+    }
+
+    console.warn(`Place ${side} Order at: ${price} with Quantity: ${Trade.quantity} with Trade Order_ID:${Trade.order_id}`)
+    res(response.data.order_id);
+
+    } catch (error) {
+      console.log("Error Happend inside placeOrderToBroker/apiservice: ",error);
+      rej(error)
+      sendMail('placeOrderToBroker/apiservice', {side,price,referenceId,parentId,isFirstTrade},error)
+    }
+  })
+
+}
+
 
 let createNewTrade = () => {
   return new Trade({

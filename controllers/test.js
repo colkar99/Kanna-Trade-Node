@@ -18,7 +18,7 @@ exports.getCandles = async(req,res,next) => {
         const token = req.body.token;
         const isOwnData = req.body.isOwnData;
         const user = await User.findOne({email:process.env.ADMIN_MAIL});
-        // const intrumentId = 232961;
+        // const intrumentId = 2977281;
 
        const intrumentId = user.instrumentId;
     

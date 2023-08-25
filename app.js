@@ -12,6 +12,9 @@ const IS_TEST_MODE = process.env.IS_TEST_MODE;
 
 var {placeOrderToBroker,cancelOpenOrder,getCandles} = require('./services/apiService');
 var {kiteHandShake,getHistoricalData,placeOrder,checkOrderExecutedOrNot,} = require('./services/kiteService');
+var {stopTicker,startTicker} = require('./controllers/ticker');
+var PlacedOrder = require('./model/PlacedOrder');
+
 
 
 
@@ -116,23 +119,23 @@ var event = schedule.scheduleJob("4 */5 * * * *", async function() {
 
 });
 
-var checkOrderStatus = schedule.scheduleJob("0 */1 * * * *", async function() {
-  try {
-      if(IS_TEST_MODE != 'YES'){
-        let startTime = moment().set({ hour:9, minute:20 });
-        let endTime = moment().set({ hour:15, minute:25 });
-        let dateNow = moment();
-        if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
-          await checkOrderExecutedOrNot()
-          //Check the exection order and update the data accordingly
-        }
+// var checkOrderStatus = schedule.scheduleJob("0 */1 * * * *", async function() {
+//   try {
+//       if(IS_TEST_MODE != 'YES'){
+//         let startTime = moment().set({ hour:9, minute:20 });
+//         let endTime = moment().set({ hour:15, minute:25 });
+//         let dateNow = moment();
+//         if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
+//           await checkOrderExecutedOrNot()
+//           //Check the exection order and update the data accordingly
+//         }
        
-      }
-  } catch (error) {
-    console.log('ERror happend in check order status call function',error)
-  }
-});
-//
+//       }
+//   } catch (error) {
+//     console.log('ERror happend in check order status call function',error)
+//   }
+// });
+
 
 
 // use this to remove token etc
@@ -155,7 +158,18 @@ var event1 = schedule.scheduleJob("0 18 * * *",async function() {
   }
 });
 
-
+async function startTickerFun (){
+  try {
+    let placedOrder = await PlacedOrder.find({date: moment().format('YYYY-MM-DD'),orderStatus: "NOT-TRIGGERED"});
+    if(placedOrder.length > 0) await startTicker();
+    else await stopTicker();
+  } catch (error) {
+    console.log(error)
+  }
+  
+}
+startTickerFun()
+// startTicker()
 //placeOrderToBroker("SELL",256.30,123123123123,'64c9d71ad3f57fff84d83d7d',true,moment().format('YYYY-MM-DD'),false);
 
 //To add new instrument update the following column in user table
