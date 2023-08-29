@@ -205,8 +205,8 @@ exports.startTicker = async(req,res,next) => {
                  placedOrder.orderStatus = 'PLACED';
                  await placedOrder.save()
                 // // Check Order Executed or not
-                 await webSocketCheckOrderExecutedOrNot();
-                 await stopTicker()
+                 checkOrderExe();
+                 stopTickerHelperFun()
             }
           }else if(placedOrder.side == 'SELL'){
              if(response[0].last_price <= placedOrder.triggerPrice){
@@ -216,8 +216,8 @@ exports.startTicker = async(req,res,next) => {
                  placedOrder.orderStatus = 'PLACED';
                  await placedOrder.save()
                 // // Check Order Executed or not
-                 await webSocketCheckOrderExecutedOrNot();
-                 await stopTicker()
+                 checkOrderExe();
+                 stopTickerHelperFun()
             }
           }
         }
@@ -251,7 +251,33 @@ exports.stopTicker = async(req,res,next) => {
         sendMail("controller/StopTicker",{},err)
 
     }
-  
-
       
 }  
+
+function stopTickerHelperFun(){
+    try {
+        if(ws == null || ws.readyState == 3) {   
+         return 'No Sockets are running currently. Please try again';
+        }else{
+            ws.close()
+         return "Ticker Stopped successfully"
+        }
+    } catch (error) {
+        console.log(error);
+        sendMail("controller/StopTicker",{},err)
+
+    }
+}
+
+async function checkOrderExe(){
+    try {
+        var timeOut = setTimeout(async () => {
+            await webSocketCheckOrderExecutedOrNot();
+            clearTimeout(timeOut);
+        },10000)
+        
+    } catch (error) {
+        console.log("Error happend in controller/ticker/checkOrderExe: " , error)
+    }
+}
+
