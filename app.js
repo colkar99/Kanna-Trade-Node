@@ -12,6 +12,9 @@ const IS_TEST_MODE = process.env.IS_TEST_MODE;
 
 var {placeOrderToBroker,cancelOpenOrder,getCandles} = require('./services/apiService');
 var {kiteHandShake,getHistoricalData,placeOrder,checkOrderExecutedOrNot,} = require('./services/kiteService');
+var {stopTicker,startTicker} = require('./controllers/ticker');
+var PlacedOrder = require('./model/PlacedOrder');
+
 
 
 
@@ -72,11 +75,38 @@ app.listen(process.env.PORT || 3000, () => {
 
 const DailyMarketWatch = require('./model/DailyMarketWatch');
 
+const months = ['JAN',"FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const nseHolidays = [{month: 'SEP',date: 19},{month: 'OCT',date: 2},{month: 'OCT',date: 24},{month: 'NOV',date: 14},{month: 'NOV',date: 27},{month: 'DEC',date: 25}]; 
 
+//To Track holiday
+let isHoliday = () => {
+  const todayDate = moment().date();
+  const todayMonth = moment().month();
+  const day = moment().day()
+  let holiday = false;
+
+  if(day == 0 || day == 6) return true; //To handle saturday and sunday
+
+  nseHolidays.forEach((hol) => {
+    if(months[todayMonth] == hol.month){
+      if(hol.date == todayDate){
+        holiday =  true;
+      }
+    }
+  })
+
+  return holiday
+
+}
 
 //Run on every 5 mins
 var event = schedule.scheduleJob("4 */5 * * * *", async function() {
   try {
+    let holiday = isHoliday();
+    if(holiday) {
+      console.log("Today is hoilday or Weekend so no Trade. Happy holiday :-)");
+      return
+    }
     console.log("Requesting Candle for Every 5 mins:" ,moment().format())
     let startTime = moment().set({ hour:9, minute:20 });
     let endTime = moment().set({ hour:15, minute:25 });
@@ -116,23 +146,23 @@ var event = schedule.scheduleJob("4 */5 * * * *", async function() {
 
 });
 
-var checkOrderStatus = schedule.scheduleJob("0 */1 * * * *", async function() {
-  try {
-      if(IS_TEST_MODE != 'YES'){
-        let startTime = moment().set({ hour:9, minute:20 });
-        let endTime = moment().set({ hour:15, minute:25 });
-        let dateNow = moment();
-        if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
-          await checkOrderExecutedOrNot()
-          //Check the exection order and update the data accordingly
-        }
+// var checkOrderStatus = schedule.scheduleJob("0 */1 * * * *", async function() {
+//   try {
+//       if(IS_TEST_MODE != 'YES'){
+//         let startTime = moment().set({ hour:9, minute:20 });
+//         let endTime = moment().set({ hour:15, minute:25 });
+//         let dateNow = moment();
+//         if(dateNow.format() > startTime.format() && dateNow.format() < endTime.format() ){
+//           await checkOrderExecutedOrNot()
+//           //Check the exection order and update the data accordingly
+//         }
        
-      }
-  } catch (error) {
-    console.log('ERror happend in check order status call function',error)
-  }
-});
-//
+//       }
+//   } catch (error) {
+//     console.log('ERror happend in check order status call function',error)
+//   }
+// });
+
 
 
 // use this to remove token etc
@@ -155,34 +185,27 @@ var event1 = schedule.scheduleJob("0 18 * * *",async function() {
   }
 });
 
+async function startTickerFun (){
+  try {
+    let placedOrder = await PlacedOrder.find({date: moment().format('YYYY-MM-DD'),orderStatus: "NOT-TRIGGERED"});
+    if(placedOrder.length > 0) await startTicker();
+    else await stopTicker();
+  } catch (error) {
+    console.log(error)
+  }
+  
+}
+startTickerFun()
 
+
+
+// startTicker()
 //placeOrderToBroker("SELL",256.30,123123123123,'64c9d71ad3f57fff84d83d7d',true,moment().format('YYYY-MM-DD'),false);
 
 //To add new instrument update the following column in user table
 //tradingSymbol,instrumentId,tradingQuantity
 // And update buSellDiff in core.Mainfunction
 
-
-
-// async function test(){
-//   //kiteHandShake();
-//   //getHistoricalData(8963586,'5minute',moment().format('YYYY-MM-DD'),moment().format('YYYY-MM-DD'))
-//   // 64c7b3355abfba60fba62186
-//   //placeOrderTesting()
-//  // await placeOrderToBroker('BUY',9,551403430378,'64c7b3355abfba60fba62186',true,moment().format('YYYY-MM-DD'),false)
-// // placeOrder("","","","","","","");
-//  // await cancelOpenOrder('BUY',230801002391393,'64c7b3355abfba60fba62186')
-//  //await checkOrderExecutedOrNot();
-
-//  let user = await User.findOne({email: process.env.ADMIN_MAIL})
-//       let candles = await getCandles(moment().format('YYYY-MM-DD'),user.token,user.instrumentId,user.brokerUserId);
-//       candles= candles.slice(1,5);
-//       for(let i = 0; i < candles.length; i++){
-//         await Core.mainFunction(candles[i]);
-//       }
-
-// }
-// test()
 
 
 

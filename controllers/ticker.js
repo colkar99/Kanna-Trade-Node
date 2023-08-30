@@ -1,7 +1,12 @@
 var WebSocket = require('ws');
+var moment = require('moment'); // require
 
 const {sendMail} = require('../services/mailerService');
 const User = require('../model/user');
+const PlacedOrder = require('../model/PlacedOrder');
+var {webSocketCheckOrderExecutedOrNot, placeOrder} = require('../services/kiteService');
+var {placeMarketOrderToBroker} = require('../services/apiService');
+
 
 var ws = null;
 const NseCD = 3,
@@ -11,12 +16,6 @@ const NseCD = 3,
 		modeQuote = "quote", // Quote excluding market depth. 52 bytes.
 		modeLTP = "ltp"
 
-function trigger(e, args) {
-  if (!triggers[e]) return
-  for (let n = 0; n < triggers[e].length; n++) {
-    triggers[e][n].apply(triggers[e][n], args ? args : []);
-  }
-}
 
 function parseBinary(binpacks) {
   const packets = splitPackets(binpacks),
@@ -144,7 +143,6 @@ function parseBinary(binpacks) {
 
   return ticks;
 }
-
 	// split one long binary message into individual tick packets
 function splitPackets(bin) {
     // number of packets
@@ -178,43 +176,58 @@ function buf2long(buf) {
     return val;
 }
 
-triggers = {
-"connect": [],
-"ticks": [],
-"disconnect": [],
-"error": [],
-"close": [],
-"reconnect": [],
-"noreconnect": [],
-"message": [],
-"order_update": []
-}
-
-
-exports.startTicker = async(re,res,next) => {
+exports.startTicker = async(req,res,next) => {
     try{
         const user = await User.findOne({email:process.env.ADMIN_MAIL});
         
         const token = encodeURIComponent(user.token.split(' ')[1]);
-        
-
-        console.log('/////////////',token)
-
-        ws = new WebSocket(`wss://ws.zerodha.com/?api_key=kitefront&enctoken=${token}`);
-        let message = { a: "mode", v: ["full", [parseInt(user.instrumentId)]] };
+        ws = new WebSocket(`wss://ws.zerodha.com/?api_key=kitefront&enctoken=${token}&user-agent=kite3-web&version=3.0.0`);
+        let message = { a: "mode", v: ["ltp", [parseInt(user.instrumentId)]] };
+        // let message = { a: "mode", v: ["ltp", [256265] ]};
     
         ws.on('open', function open() {
             ws.send(JSON.stringify(message));
           });
     
-        ws.on('message', function message(data,isBuffer)  {
+        ws.on('message', async function message(data)  {
           let response = parseBinary(data);
+          if(!response.length) return;
+
+          let placedOrder = await PlacedOrder.findOne({date: moment().format('YYYY-MM-DD').toString(),orderStatus: 'NOT-TRIGGERED'});
+        
+          
+          if(placedOrder){
+          if(placedOrder.side == 'BUY'){
+             if(response[0].last_price >= placedOrder.triggerPrice){
+                // Execute market order
+                 let orderId = await placeMarketOrderToBroker('BUY',0,placedOrder._id,placedOrder.market_data_id,placedOrder.isFirstTrade);
+                 placedOrder.orderId = orderId;
+                 placedOrder.orderStatus = 'PLACED';
+                 await placedOrder.save()
+                // // Check Order Executed or not
+                 checkOrderExe();
+                 stopTickerHelperFun()
+            }
+          }else if(placedOrder.side == 'SELL'){
+             if(response[0].last_price <= placedOrder.triggerPrice){
+                // Execute market order
+                 let orderId = await placeMarketOrderToBroker('SELL',0,placedOrder._id,placedOrder.market_data_id,placedOrder.isFirstTrade);
+                 placedOrder.orderId = orderId;
+                 placedOrder.orderStatus = 'PLACED';
+                 await placedOrder.save()
+                // // Check Order Executed or not
+                 checkOrderExe();
+                 stopTickerHelperFun()
+            }
+          }
+        }
           console.log(response);
           });
           
         ws.on('error', console.error);
     
-        res.send("Ticker Started Successfully");
+        if(res) res.send("Ticker Started Successfully")
+        else return true
     }
     catch(err){
         console.log(err);
@@ -224,23 +237,47 @@ exports.startTicker = async(re,res,next) => {
 }   
 
 exports.stopTicker = async(req,res,next) => {
-    if(ws == null) {
-        return res.send('No Sockets are running currently. Please try again');
-        
-    }else{
-        ws.close()
-    }
-    // ws.clients.forEach((socket) => {
-    //     // Soft close
-    //     socket.close();
-      
-    //     process.nextTick(() => {
-    //       if ([socket.OPEN, socket.CLOSING].includes(socket.readyState)) {
-    //         // Socket still hangs, hard close
-    //         socket.terminate();
-    //       }
-    //     });
-    //   });
+    try {
+        if(ws == null || ws.readyState == 3) {
+            if(res) res.send('No Sockets are running currently. Please try again');
+            else return true
+        }else{
+            ws.close()
+            if(res) res.send("Ticker Stopped successfully")
+            else return true
+        }
+    } catch (error) {
+        console.log(error);
+        sendMail("controller/StopTicker",{},err)
 
-      res.send("Ticker Stopped successfullt")
+    }
+      
 }  
+
+function stopTickerHelperFun(){
+    try {
+        if(ws == null || ws.readyState == 3) {   
+         return 'No Sockets are running currently. Please try again';
+        }else{
+            ws.close()
+         return "Ticker Stopped successfully"
+        }
+    } catch (error) {
+        console.log(error);
+        sendMail("controller/StopTicker",{},err)
+
+    }
+}
+
+async function checkOrderExe(){
+    try {
+        var timeOut = setTimeout(async () => {
+            await webSocketCheckOrderExecutedOrNot();
+            clearTimeout(timeOut);
+        },10000)
+        
+    } catch (error) {
+        console.log("Error happend in controller/ticker/checkOrderExe: " , error)
+    }
+}
+

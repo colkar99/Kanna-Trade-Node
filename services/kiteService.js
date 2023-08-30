@@ -4,6 +4,7 @@ const User = require("../model/user");
 const DailyMarketWatch = require("../model/DailyMarketWatch");
 const Trade = require("../model/Trade");
 const {sendMail} = require('./mailerService');
+const PlacedOrder = require('../model/PlacedOrder')
 
 
 
@@ -117,4 +118,59 @@ exports.placeOrder = async (side, tradingsymbol,quantity,trigger_price,user_id,t
     }
   });
 };
+
+exports.webSocketCheckOrderExecutedOrNot = async() => {
+  return new Promise(async(res,rej) => {
+      try {
+          let user = await User.findOne({email: process.env.ADMIN_MAIL});
+          if(!user) return rej(new Error("User not found in check order exec function insite kite service"))
+
+          let url = "https://kite.zerodha.com/oms/orders";
+          const config = {
+              headers: {
+                authorization: user.token,
+              },
+            };
+
+          const response = await axios.get(url, config);
+          let data = response.data.data;
+          
+          if(data.length != 0){
+              for(let i = 0 ; i < data.length; i++){
+                  if(data[i].status == 'COMPLETE'){
+                      let trade = await Trade.findOne({order_id: data[i].order_id,isMarkedAsCompleted: false});
+                      if(!trade){
+                          // console.log("Outside Trades",trade);
+                          continue;
+                      }
+                      // console.log('Inside Trades', trade)
+                      trade.status = "COMPLETE";
+                      trade.order_exe_price = data[i].average_price;
+                      trade.isMarkedAsCompleted = true;
+                      let parentId = trade.market_data_id;
+                      let placedOrder = await PlacedOrder.findOne({_id: trade.openOrderRefId,orderStatus: 'PLACED'});
+                      placedOrder.orderStatus = 'EXECUTED';
+                      await placedOrder.save();
+                      await trade.save()
+                      await DailyMarketWatch.findByIdAndUpdate(
+                          { _id: parentId },
+                          {
+                              openOrderId: '',
+                          },
+                          {
+                            new: true,
+                          }
+                        );
+                  }
+              }
+          }
+          res(true)
+          //console.log('Inside Order Executed or not logic', data);  
+      } catch (error) {
+          console.log("From Order Exec Function",error);
+          rej(error);
+          sendMail('checkOrderExecutedOrNot/kiteService',{},error);
+      }
+  })
+}
 
