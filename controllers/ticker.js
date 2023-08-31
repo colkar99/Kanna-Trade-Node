@@ -188,7 +188,7 @@ exports.startTicker = async(req,res,next) => {
         ws.on('open', function open() {
             ws.send(JSON.stringify(message));
           });
-    
+          console.log("Ticker Started!!!!.....")
         ws.on('message', async function message(data)  {
           let response = parseBinary(data);
           if(!response.length) return;
@@ -221,7 +221,7 @@ exports.startTicker = async(req,res,next) => {
             }
           }
         }
-          console.log(response);
+          //console.log(response);
           });
           
         ws.on('error', console.error);
@@ -230,7 +230,7 @@ exports.startTicker = async(req,res,next) => {
         else return true
     }
     catch(err){
-        console.log(err);
+        console.log("From Start Ticker",err);
         sendMail("controller/StartTicker",{},err)
     }
    
@@ -238,6 +238,8 @@ exports.startTicker = async(req,res,next) => {
 
 exports.stopTicker = async(req,res,next) => {
     try {
+        console.log("Ticker Stoped!!!!.....")
+
         if(ws == null || ws.readyState == 3) {
             if(res) res.send('No Sockets are running currently. Please try again');
             else return true
@@ -256,6 +258,8 @@ exports.stopTicker = async(req,res,next) => {
 
 function stopTickerHelperFun(){
     try {
+        console.log("Ticker Stoped!!!!.....")
+
         if(ws == null || ws.readyState == 3) {   
          return 'No Sockets are running currently. Please try again';
         }else{
