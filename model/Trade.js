@@ -8,7 +8,8 @@ const TradeSchema = mongoose.Schema(
     order_type: {type: String, enum:["MARKET","LIMIT","SL","SL-M"],default:"SL-M"},
     product: {type: String, enum:["CNC","NRML","MIS"],default: "MIS"},
     validity: {type: String,enum:["DAY"],default: "DAY"},
-    exchange:{type: String,enum:["NSE","BSE"],default: "NSE"},
+    // For Stocks select NSE for F&O SElect NFO
+    exchange:{type: String,enum:["NSE","BSE","NFO"],default: "NFO"},
     tradingsymbol:{type: String,default: ""},
     transaction_type:{type: String,enum:["BUY","SELL"],required: true},
     quantity: {type: Number,required: true},
