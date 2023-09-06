@@ -62,9 +62,12 @@ exports.mainFunction = async(data) => {
               console.log("Trade already ended for the day")
               return res(true)
             }
-            if(MB.lastCandleTimeStamp != "" && moment(MB.lastCandleTimeStamp).format() > day.format()){
+
+            if(MB.lastCandleTimeStamp != "" && moment(MB.lastCandleTimeStamp).format() >= day.format()){
+
               return res(true)
             }
+
             
             MB.lastCandleTimeStamp = data[0];
 
@@ -95,7 +98,6 @@ exports.mainFunction = async(data) => {
 
 
 let coreLogic = async (data,MB) => {
-  
   return new Promise(async(res,rej) => {
     try {
       if(!MB.tradeStarted){

@@ -97,7 +97,8 @@ exports.placeOrder = async (side, tradingsymbol,quantity,trigger_price,user_id,t
       var data = {
         tradingsymbol: tradingsymbol,
         variety: "regular",
-        exchange: "NSE",
+        //exchange: "NSE", // Change this Equity
+        exchange: "NFO", // use this for F&O
         transaction_type: side,
         order_type: order_type,
         quantity: quantity,

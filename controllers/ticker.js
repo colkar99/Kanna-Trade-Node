@@ -197,32 +197,32 @@ exports.startTicker = async(req,res,next) => {
         
           
           if(placedOrder){
-          if(placedOrder.side == 'BUY'){
-             if(response[0].last_price >= placedOrder.triggerPrice){
-                // Execute market order
-                 let orderId = await placeMarketOrderToBroker('BUY',0,placedOrder._id,placedOrder.market_data_id,placedOrder.isFirstTrade);
-                 placedOrder.orderId = orderId;
-                 placedOrder.orderStatus = 'PLACED';
-                 await placedOrder.save()
-                // // Check Order Executed or not
-                 checkOrderExe();
-                 stopTickerHelperFun()
-            }
-          }else if(placedOrder.side == 'SELL'){
-             if(response[0].last_price <= placedOrder.triggerPrice){
-                // Execute market order
-                 let orderId = await placeMarketOrderToBroker('SELL',0,placedOrder._id,placedOrder.market_data_id,placedOrder.isFirstTrade);
-                 placedOrder.orderId = orderId;
-                 placedOrder.orderStatus = 'PLACED';
-                 await placedOrder.save()
-                // // Check Order Executed or not
-                 checkOrderExe();
-                 stopTickerHelperFun()
+            if(placedOrder.side == 'BUY'){
+                if(response[0].last_price >= placedOrder.triggerPrice){
+                    // Execute market order
+                    let orderId = await placeMarketOrderToBroker('BUY',0,placedOrder._id,placedOrder.market_data_id,placedOrder.isFirstTrade);
+                    placedOrder.orderId = orderId;
+                    placedOrder.orderStatus = 'PLACED';
+                    await placedOrder.save()
+                    // // Check Order Executed or not
+                    checkOrderExe();
+                    stopTickerHelperFun()
+                }
+            }else if(placedOrder.side == 'SELL'){
+                if(response[0].last_price <= placedOrder.triggerPrice){
+                    // Execute market order
+                    let orderId = await placeMarketOrderToBroker('SELL',0,placedOrder._id,placedOrder.market_data_id,placedOrder.isFirstTrade);
+                    placedOrder.orderId = orderId;
+                    placedOrder.orderStatus = 'PLACED';
+                    await placedOrder.save()
+                    // // Check Order Executed or not
+                    checkOrderExe();
+                    stopTickerHelperFun()
+                }
             }
           }
-        }
-          //console.log(response);
-          });
+          // console.log(response);
+        });
           
         ws.on('error', console.error);
     
